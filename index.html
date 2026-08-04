@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liagro News — Painel (PRÉVIA)</title>
+<style>
+  :root {
+    --green: #2e7d32; --red: #c62828; --gray: #616161;
+    --bg: #f5f6f8; --card: #ffffff; --border: #e2e4e8; --text: #1f2430; --muted: #6b7280;
+    --accent: #2f6f4f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  #preview-banner { background: #b45309; color: #fff; text-align: center; padding: 8px; font-size: 13px; font-weight: 600; }
+  header { background: var(--accent); color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  header h1 { font-size: 20px; margin: 0; }
+  header .meta { font-size: 13px; opacity: 0.9; }
+  main { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .dashboard-columns { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 900px) {
+    .dashboard-columns { grid-template-columns: 1fr; }
+  }
+  /* Soft area color-coding — reuses the same pastel palette already used for keyword badges.
+     "Análises" (scheduler + pendentes + produzidas) is the largest area on the page, so it
+     stays white/neutral; the other three areas get a light tint + a thin accent rule on top. */
+  section.group-artigos { background: #eef2fb; border-color: #d7e0f5; }
+  section.group-artigos h2 { color: #3a5a9b; }
+  section.group-boletim { background: #f1eaf7; border-color: #e3d3ee; }
+  section.group-boletim h2 { color: #6b3fa0; }
+  section.group-fontes { background: #faf6ec; border-color: #ecdfc0; }
+  section.group-fontes h2 { color: #92702c; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .card h3 { margin: 0 0 4px; font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  .card .big { font-size: 32px; font-weight: 700; margin: 4px 0; }
+  .semaforo-card .semaforo-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .semaforo-card .semaforo-label { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .bulletin-title-input { flex: 1; font-size: 17px; font-weight: 700; font-family: inherit; color: var(--text); border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; margin-right: 10px; background: transparent; }
+  .bulletin-title-input:hover { border-color: var(--border); }
+  .bulletin-title-input:focus { border-color: var(--accent); outline: none; background: #fff; }
+  .candidate-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .candidate-row:last-child { border-bottom: none; }
+  .candidate-row .candidate-info { flex: 1; min-width: 0; }
+  .candidate-row .candidate-title { font-weight: 600; }
+  .candidate-row .candidate-title a { color: inherit; }
+  .candidate-row .candidate-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .candidate-checks { display: flex; gap: 14px; align-items: center; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .candidate-checks label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .candidate-checks input[type=checkbox]:disabled { cursor: default; }
+  .sentiment-row { display: flex; gap: 10px; margin-top: 8px; font-size: 13px; }
+  .badge { padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .badge.positivo { background: #e6f4ea; color: var(--green); }
+  .badge.negativo { background: #fdeaea; color: var(--red); }
+  .badge.neutro { background: #eeeeee; color: var(--gray); }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; }
+  section h2 { font-size: 16px; margin: 0 0 14px; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; background: var(--accent); color: #fff; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  input[type=text], input[type=password] { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 14px; flex: 1; min-width: 160px; }
+  .article-list { list-style: none; margin: 0; padding: 0; }
+  .article-item { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .article-item:last-child { border-bottom: none; }
+  .article-title { font-weight: 600; cursor: pointer; }
+  .article-title:hover { text-decoration: underline; }
+  .article-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .status-msg { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 50; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 700px; width: 100%; }
+  .modal h2 { margin-top: 0; }
+  .modal .analysis-text { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
+  .modal .content-text { white-space: pre-wrap; line-height: 1.5; font-size: 14px; color: #333; max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .close-x { float: right; background: none; color: var(--muted); font-size: 20px; padding: 0 4px; }
+  .hidden { display: none !important; }
+  .filters select { border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 14px; }
+  .portal-link { color: #fff; font-size: 13px; text-decoration: none; border: 1px solid rgba(255,255,255,0.5); border-radius: 999px; padding: 4px 12px; }
+  .portal-link:hover { background: rgba(255,255,255,0.12); }
+  .portal-link.disabled { opacity: 0.6; cursor: default; border-style: dashed; }
+  .rte-toolbar { display: flex; gap: 4px; margin: 6px 0; }
+  .rte-toolbar button { background: #fff; color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
+  .rte-toolbar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .rte-box { width: 100%; min-height: 80px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; line-height: 1.5; }
+  .rte-box:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .rte-box ul, .rte-box ol { margin: 6px 0; padding-left: 22px; }
+  .highlight-list { list-style: none; margin: 0 0 14px; padding: 0; }
+  .highlight-item { padding: 10px 12px; margin-bottom: 8px; background: #fbf7ea; border: 1px solid #eadfb4; border-radius: 8px; }
+  .highlight-item .article-title { display: block; }
+  .week-sentiment { margin: 6px 0 4px; }
+  .badge.pendente { background: #fff4e0; color: #b45309; }
+  .badge.arquivado { background: #f0f0f0; color: #9ca3af; }
+  .badge.cultura { background: #eaf3ea; color: #2f6f4f; }
+  .badge.insumo { background: #f5efe0; color: #92702c; }
+  .badge.empresa { background: #f1eaf7; color: #6b3fa0; }
+  .badge.regional { background: #eef2fb; color: #3a5a9b; }
+  .badge.geral { background: #eeeeee; color: var(--gray); }
+  .badge.country { background: #eef6f6; color: #2f6f6f; }
+  .warn-msg { color: #b45309; background: #fff8ec; border: 1px solid #f3dfb1; border-radius: 8px; padding: 8px 12px; }
+  select#scheduler-frequency-select, select#keyword-category-select, select.source-country-select { border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; font-size: 13px; }
+  /* Player-style status controls (sources' Ativo/Pausado/Arquivado, scheduler's Ativo/Pausado) —
+     icon buttons instead of a dropdown; the current state gets a solid color fill so it reads
+     at a glance, like the play/pause indicator on a media player. "Pendente" is deliberately not
+     one of these icons — it's a status the system assigns (no collector implemented yet), not
+     something the operator picks. */
+  .status-icon-group { display: inline-flex; gap: 6px; }
+  .icon-divider { width: 1px; background: var(--border); margin: 0 2px; }
+  .status-icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: #fff; color: var(--muted); font-size: 13px; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; line-height: 1; }
+  .status-icon-btn.icon-delete { color: var(--red); }
+  .status-icon-btn.icon-delete:hover:not(:disabled) { background: var(--red); border-color: var(--red); color: #fff; }
+  .status-icon-btn.icon-publish { color: var(--green); }
+  .status-icon-btn.icon-publish:hover:not(:disabled) { background: var(--green); border-color: var(--green); color: #fff; }
+  #sources-list li.article-item { border-left: 3px solid transparent; padding-left: 10px; transition: opacity .15s ease; }
+  #sources-list li.source-implemented { border-left-color: var(--accent); }
+  #sources-list li.source-unimplemented { border-left-color: var(--border); opacity: 0.68; }
+  #sources-list li.source-unimplemented:hover { opacity: 1; }
+  #bulletin-week-list li.bulletin-archived { opacity: 0.6; }
+  #bulletin-week-list li.bulletin-archived:hover { opacity: 1; }
+  .status-icon-btn:hover:not(.current) { border-color: var(--accent); color: var(--accent); }
+  .status-icon-btn:disabled { opacity: 0.5; cursor: default; }
+  .status-icon-btn.current.icon-active { background: var(--green); border-color: var(--green); color: #fff; }
+  .status-icon-btn.current.icon-paused { background: #b45309; border-color: #b45309; color: #fff; }
+  .status-icon-btn.current.icon-archived { background: var(--gray); border-color: var(--gray); color: #fff; }
+  .inline-form label { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .inline-form input[type=date], .inline-form select, .inline-form textarea { width: 100%; margin: 6px 0 14px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 14px; font-family: inherit; }
+  .inline-form input[type=text] { width: 100%; margin: 6px 0 10px; }
+</style>
+</head>
+<body>
+
+<div id="preview-banner">PRÉVIA — dados fictícios, apenas para revisar o visual. Nenhum backend real está conectado aqui.</div>
+
+<div id="app">
+  <header>
+    <h1>🌾 Liagro News — Painel</h1>
+    <div class="row" style="gap:14px;">
+      <div class="meta" id="header-meta"></div>
+      <a href="#" id="portal-link" class="portal-link" target="_blank" rel="noopener">Portal ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid" id="overview-cards">
+      <div class="card"><h3>Total de artigos</h3><div class="big">—</div></div>
+    </div>
+
+    <div class="dashboard-columns">
+    <div class="col-wide">
+
+    <section id="scheduler-section">
+      <h2>Análise Automática</h2>
+      <p class="status-msg">Controla a execução diária agendada da análise por IA. Não afeta os botões manuais de "Analisar agora"/"Processar" logo abaixo, que continuam disponíveis a qualquer momento.</p>
+      <div class="row" style="gap:20px; flex-wrap:wrap; margin-top:6px;">
+        <div class="status-icon-group">
+          <button class="status-icon-btn icon-active" id="scheduler-activate-btn" title="Ativar">▶</button>
+          <button class="status-icon-btn icon-paused" id="scheduler-pause-btn" title="Pausar">⏸</button>
+        </div>
+        <div class="row" style="gap:8px;">
+          <label for="scheduler-frequency-select" style="font-size:13px; color:var(--muted); font-weight:600;">Periodicidade</label>
+          <select id="scheduler-frequency-select">
+            <option value="daily">Diário</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensal</option>
+          </select>
+        </div>
+      </div>
+      <p class="warn-msg hidden" id="scheduler-daily-warning" style="margin-top:10px;">⚠️ Periodicidade diária processa artigos com mais frequência e pode gerar custo mensal mais alto com a API da Anthropic — veja as estimativas de custo na seção abaixo antes de manter essa opção.</p>
+      <p class="status-msg" id="scheduler-run-info"></p>
+      <p class="status-msg" id="scheduler-status-msg"></p>
+    </section>
+
+    <section id="pending-section">
+      <h2>Análises pendentes</h2>
+      <p id="pending-count" class="status-msg">Carregando…</p>
+
+      <table id="scope-table" style="width:100%; border-collapse: collapse; margin-bottom: 10px;">
+        <thead>
+          <tr style="text-align:left; font-size:13px; color:var(--muted);">
+            <th style="padding:6px 4px;">Escopo</th>
+            <th style="padding:6px 4px;">Pendentes</th>
+            <th style="padding:6px 4px;">Custo estimado</th>
+            <th style="padding:6px 4px;"></th>
+          </tr>
+        </thead>
+        <tbody id="scope-table-body">
+          <tr><td colspan="4" class="status-msg">Calculando estimativas…</td></tr>
+        </tbody>
+      </table>
+      <p class="status-msg">Estimativa aproximada com base no tamanho médio dos artigos pendentes de cada escopo — o custo real pode variar.</p>
+      <p class="status-msg" id="pending-status"></p>
+
+      <ul class="article-list" id="pending-list" style="margin-top:14px;"></ul>
+    </section>
+
+    <section id="add-article-section" class="group-artigos">
+      <h2>Adicionar artigo manualmente</h2>
+      <p class="status-msg">Cole o link de um artigo para incluí-lo manualmente — ele entra no mesmo fluxo de pendente → análise → boletim que os artigos coletados automaticamente.</p>
+      <div class="row" style="margin-top:10px;">
+        <input type="text" id="manual-url-input" placeholder="https://...">
+        <button id="manual-extract-btn">Buscar conteúdo</button>
+      </div>
+      <div id="manual-article-form" class="hidden inline-form" style="margin-top:14px;">
+        <label>Título</label>
+        <input type="text" id="manual-title-input">
+        <label>Conteúdo</label>
+        <textarea id="manual-content-input" style="width:100%; min-height:160px; margin:6px 0 14px; border:1px solid var(--border); border-radius:8px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
+        <div class="row">
+          <button id="manual-save-btn">Salvar artigo</button>
+          <button class="secondary" id="manual-cancel-btn">Cancelar</button>
+        </div>
+      </div>
+      <p class="status-msg" id="manual-article-status"></p>
+
+      <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+        <p class="status-msg">Não tem um link? Cadastre o artigo totalmente à mão, sem precisar de URL.</p>
+        <div class="row">
+          <button class="secondary" id="manual-full-toggle-btn">+ Adicionar artigo totalmente manual</button>
+        </div>
+        <div id="manual-full-form" class="hidden inline-form" style="margin-top:14px;">
+          <label>Manchete</label>
+          <input type="text" id="manual-full-title-input">
+          <label>Conteúdo</label>
+          <textarea id="manual-full-content-input" style="width:100%; min-height:160px; margin:6px 0 14px; border:1px solid var(--border); border-radius:8px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
+          <label>Data</label>
+          <input type="date" id="manual-full-date-input">
+          <label>Fonte</label>
+          <input type="text" id="manual-full-source-input" list="manual-full-source-list" placeholder="Ex.: Embrapa, jornal impresso, informação repassada por telefone…">
+          <datalist id="manual-full-source-list"></datalist>
+          <label>Link (opcional)</label>
+          <input type="text" id="manual-full-url-input" placeholder="https://...">
+          <label>Palavras-chave</label>
+          <select id="manual-full-keywords-select" multiple size="6"></select>
+          <div class="row" style="margin-top:10px;">
+            <button id="manual-full-save-btn">Salvar artigo</button>
+            <button class="secondary" id="manual-full-cancel-btn">Cancelar</button>
+          </div>
+        </div>
+        <p class="status-msg" id="manual-full-status"></p>
+      </div>
+    </section>
+
+    <section id="browser-section" class="group-artigos">
+      <h2>Artigos</h2>
+      <div class="row filters" style="margin-bottom: 14px;">
+        <input type="text" id="search-input" placeholder="Buscar por palavra-chave…">
+        <button id="search-btn">Buscar</button>
+        <button class="secondary" id="clear-search-btn">Limpar</button>
+        <select id="source-filter"><option value="">Todas as fontes</option></select>
+        <select id="keyword-filter"><option value="">Todas as palavras-chave</option></select>
+      </div>
+      <ul class="article-list" id="article-list"></ul>
+      <div class="row" style="margin-top:14px;">
+        <button class="secondary" id="load-more-btn">Carregar mais</button>
+      </div>
+    </section>
+
+    <section id="analyses-section">
+      <h2>Análises produzidas</h2>
+      <p class="status-msg">Todas as análises geradas até agora, da mais recente para a mais antiga.</p>
+      <ul class="article-list" id="analyses-list"></ul>
+      <div class="row" style="margin-top:14px;">
+        <button class="secondary" id="analyses-load-more-btn">Carregar mais</button>
+      </div>
+    </section>
+
+    <section id="bulletin-section" class="group-boletim">
+      <h2>Boletins</h2>
+      <p class="status-msg">Resumo semanal gerado por IA a partir das análises da semana. Um rascunho é criado automaticamente toda segunda-feira — edite o texto abaixo antes de publicar.</p>
+      <ul class="article-list" id="bulletin-week-list"></ul>
+
+      <div id="bulletin-editor" class="hidden" style="margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+        <div class="row" style="justify-content:space-between; margin-bottom:4px; align-items:center;">
+          <input type="text" id="bulletin-editor-title-input" class="bulletin-title-input" placeholder="Título do boletim">
+          <span class="badge neutro" id="bulletin-status-badge"></span>
+        </div>
+        <div class="week-sentiment" id="bulletin-sentiment-row"></div>
+
+        <label style="font-size:13px; color:var(--muted); font-weight:600;">Resumo da semana</label>
+        <div class="rte-toolbar" data-target="bulletin-summary-input">
+          <button type="button" data-cmd="bold"><b>B</b></button>
+          <button type="button" data-cmd="italic"><i>I</i></button>
+          <button type="button" data-cmd="insertUnorderedList">• Lista</button>
+          <button type="button" data-cmd="insertOrderedList">1. Lista</button>
+        </div>
+        <div id="bulletin-summary-input" class="rte-box" contenteditable="true"></div>
+
+        <label style="font-size:13px; color:var(--muted); font-weight:600;">Análise e conclusão</label>
+        <div class="rte-toolbar" data-target="bulletin-analysis-input">
+          <button type="button" data-cmd="bold"><b>B</b></button>
+          <button type="button" data-cmd="italic"><i>I</i></button>
+          <button type="button" data-cmd="insertUnorderedList">• Lista</button>
+          <button type="button" data-cmd="insertOrderedList">1. Lista</button>
+        </div>
+        <div id="bulletin-analysis-input" class="rte-box" style="min-height:140px;" contenteditable="true"></div>
+
+        <h4 style="margin:20px 0 8px;">Artigos e destaques da semana (<span id="bulletin-article-count">0</span> selecionado(s))</h4>
+        <p class="status-msg">O sistema sugere os artigos analisados dentro do período do boletim. Marque "Incluir" para os que devem entrar no boletim e "Destaque" para os que aparecerão na seção de destaques.</p>
+        <div id="bulletin-candidates-list"></div>
+
+        <p class="status-msg" style="margin-top:16px;">O artigo que você procura não está na lista acima (ex.: publicado fora do período)? Busque no banco de dados e adicione manualmente.</p>
+        <div class="row" style="gap:8px;">
+          <input type="text" id="bulletin-candidate-search-input" placeholder="Buscar artigo por título/conteúdo…">
+          <button class="secondary" id="bulletin-candidate-search-btn">Buscar artigo</button>
+        </div>
+        <div id="bulletin-candidate-search-results"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="secondary" id="bulletin-selection-save-btn">Salvar seleção</button>
+          <span class="status-msg" id="bulletin-selection-status"></span>
+        </div>
+
+        <div class="row" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+          <button class="secondary" id="bulletin-save-btn">Salvar rascunho</button>
+          <button id="bulletin-publish-btn">Publicar</button>
+          <a href="#" id="bulletin-portal-link" class="hidden" target="_blank" rel="noopener">Ver no portal ↗</a>
+          <span class="status-msg" id="bulletin-editor-status"></span>
+        </div>
+        <p class="status-msg" id="bulletin-publish-note">Ainda não há um portal público da Liagro configurado — "Publicar" hoje apenas marca o boletim como publicado internamente. Quando o portal existir, este botão passará a enviar o conteúdo para lá também.</p>
+      </div>
+    </section>
+
+    </div>
+    <div class="col-narrow">
+
+    <section id="sources-section" class="group-fontes">
+      <h2>Fontes</h2>
+      <p class="status-msg">Sites monitorados pelo coletor automático. Pausar/arquivar interrompe a coleta sem apagar artigos já salvos; excluir remove apenas o registro de acompanhamento — o código do coletor (quando existir) e os artigos já coletados não são afetados.</p>
+      <ul class="article-list" id="sources-list"></ul>
+
+      <div class="row" style="margin-top:14px;">
+        <button class="secondary" id="add-source-btn">+ Adicionar site</button>
+      </div>
+      <div id="add-source-form" class="hidden inline-form" style="margin-top:14px;">
+        <label>Nome do site</label>
+        <input type="text" id="source-name-input">
+        <label>URL</label>
+        <input type="text" id="source-url-input" placeholder="https://...">
+        <label>Feed RSS (opcional, se souber)</label>
+        <input type="text" id="source-feed-input" placeholder="https://.../rss">
+        <label>Notas (opcional)</label>
+        <input type="text" id="source-notes-input" placeholder="Ex.: prioridade, dificuldades esperadas de scraping…">
+        <label>País</label>
+        <select id="source-country-input"></select>
+        <div class="row">
+          <button id="source-save-btn">Adicionar</button>
+          <button class="secondary" id="source-cancel-btn">Cancelar</button>
+        </div>
+      </div>
+      <p class="status-msg" id="sources-status"></p>
+    </section>
+
+    <section id="keywords-section" class="group-fontes">
+      <h2>Palavras-chave</h2>
+      <p class="status-msg">Termos usados para marcar automaticamente os artigos coletados — busca determinística no título/conteúdo, sem custo de IA. Útil para filtrar por cultura, insumo ou região (veja o filtro na seção Artigos).</p>
+      <ul class="article-list" id="keywords-list"></ul>
+
+      <div class="row" style="margin-top:14px;">
+        <button class="secondary" id="add-keyword-btn">+ Adicionar palavra-chave</button>
+      </div>
+      <div id="add-keyword-form" class="hidden inline-form" style="margin-top:14px;">
+        <label>Termo</label>
+        <input type="text" id="keyword-term-input" placeholder="ex.: soja">
+        <label>Categoria</label>
+        <select id="keyword-category-select">
+          <option value="cultura">Cultura</option>
+          <option value="insumo">Insumo</option>
+          <option value="empresa">Empresa</option>
+          <option value="regional">Regional</option>
+          <option value="geral">Geral</option>
+        </select>
+        <div class="row" style="margin-top:10px;">
+          <button id="keyword-save-btn">Adicionar</button>
+          <button class="secondary" id="keyword-cancel-btn">Cancelar</button>
+        </div>
+      </div>
+      <p class="status-msg" id="keywords-status"></p>
+    </section>
+
+    </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop hidden" id="modal-backdrop">
+  <div class="modal">
+    <button class="close-x" id="modal-close">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// PREVIEW MODE — this file is a visual mockup only. The api()
+// function below returns canned data instead of calling the real
+// Edge Function, so every screen and button can be reviewed without
+// anything being deployed. This file is NOT the one that gets
+// deployed to GitHub Pages — dashboard/index.html is.
+// ============================================================
+const SOURCES = [
+  "embrapa","infomoney","agrolink","reuters","cnn_brasil","cultivar","canal_rural",
+  "globo_rural","globo_g1","agropages","agfeed","bayer","syngenta","basf","corteva",
+  "fmc","dtn_progressive_farmer","ruveon","manual",
+];
+const ANALYZER_CRON_UTC_HOUR = 6;
+const ANALYZER_CRON_UTC_MINUTE = 30;
+// PREVIEW: set to a placeholder URL (not the real one) so this mockup shows
+// what the header link looks like once a portal exists. The real
+// dashboard/index.html ships with PORTAL_URL = "" until the domain is known.
+const PORTAL_URL = "https://portal.liagro.com.br";
+
+let articleOffset = 0;
+let currentSourceFilter = "";
+let currentKeywordFilter = "";
+let currentSearchQuery = "";
+
+// ---------- Mock data ----------
+const MOCK_TITLES = [
+  ["Safra de soja 2026/27 deve crescer 4% aponta Conab", "agrolink", "grãos", "positivo"],
+  ["Preço do milho recua com pressão de exportações americanas", "reuters", "mercado", "negativo"],
+  ["Syngenta anuncia novo fungicida para ferrugem asiática", "syngenta", "agroquímicos", "neutro"],
+  ["Chuvas irregulares preocupam produtores do Mato Grosso", "canal_rural", "clima", "negativo"],
+  ["Corteva expande produção de sementes bioestimulantes", "corteva", "tecnologia", "positivo"],
+  ["Embrapa lança cultivar de algodão resistente à seca", "embrapa", "tecnologia", "positivo"],
+  ["Bayer atualiza registro de herbicida para Crop Science", "bayer", "agroquímicos", "neutro"],
+  ["Exportações de café batem recorde em julho", "globo_rural", "mercado", "positivo"],
+  ["FMC anuncia parceria para bioinsumos na América Latina", "fmc", "agroquímicos", "positivo"],
+  ["Governo anuncia linha de crédito para pequenos produtores", "cultivar", "política", "positivo"],
+  ["DTN alerta para geada tardia no sul do Brasil", "dtn_progressive_farmer", "clima", "negativo"],
+  ["Ruveon inicia operações comerciais nos EUA", "ruveon", "agroquímicos", "neutro"],
+];
+
+let MOCK_KEYWORD_ID = 20;
+const MOCK_KEYWORDS = [
+  { id: 1, term: "soja", category: "cultura" },
+  { id: 2, term: "milho", category: "cultura" },
+  { id: 3, term: "algodão", category: "cultura" },
+  { id: 4, term: "clima", category: "geral" },
+  { id: 5, term: "herbicida", category: "insumo" },
+  { id: 6, term: "fungicida", category: "insumo" },
+  { id: 7, term: "fertilizante", category: "insumo" },
+  { id: 8, term: "Cerrado", category: "regional" },
+  { id: 9, term: "Sul", category: "regional" },
+  { id: 10, term: "Nordeste", category: "regional" },
+  { id: 11, term: "Bayer", category: "empresa" },
+  { id: 12, term: "BASF", category: "empresa" },
+  { id: 13, term: "Syngenta", category: "empresa" },
+];
+
+// PREVIEW: same word-boundary substring matching scraper/runner.py does for
+// real (see migration 009) — demonstrates realistic tagging on mock titles.
+function matchMockKeywords(text) {
+  return MOCK_KEYWORDS
+    .filter(k => new RegExp("\\b" + k.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text))
+    .map(k => k.term);
+}
+
+function mockArticle(i) {
+  const [title, source, category, sentiment] = MOCK_TITLES[i % MOCK_TITLES.length];
+  const daysAgo = i * 1.7;
+  const d = new Date(Date.now() - daysAgo * 86400000);
+  return {
+    id: 1000 + i, title, source, category,
+    url: "https://example.com/noticia-" + i,
+    published_at: d.toISOString(), scraped_at: d.toISOString(),
+    language: source === "reuters" || source === "bayer" || source === "syngenta" || source === "fmc" || source === "corteva" || source === "dtn_progressive_farmer" || source === "ruveon" ? "en" : "pt-BR",
+    _sentiment: sentiment,
+    matched_keywords: matchMockKeywords(title),
+  };
+}
+
+const MOCK_SUMMARIES = {
+  positivo: "Notícia favorável ao setor, com impacto positivo esperado para produtores.",
+  negativo: "Fator de risco identificado que pode pressionar custos ou reduzir margens.",
+  neutro: "Informação relevante para acompanhamento, sem impacto direto imediato.",
+};
+
+function isoWeekStart(weeksAgo) {
+  // Monday of the (weeksAgo+1)-th most recently *completed* week — e.g.
+  // weeksAgo=0 is last week, weeksAgo=1 is the week before that.
+  const now = new Date();
+  const dayOfWeek = (now.getUTCDay() + 6) % 7; // 0=Monday .. 6=Sunday
+  const monday = new Date(now);
+  monday.setUTCDate(now.getUTCDate() - dayOfWeek - 7 * (weeksAgo + 1));
+  return monday.toISOString().slice(0, 10);
+}
+function addDaysIso(iso, days) {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+const MOCK_BULLETINS = [
+  {
+    id: 3, week_start: isoWeekStart(0), week_end: addDaysIso(isoWeekStart(0), 6),
+    title: null,
+    archived: false,
+    status: "draft", published_at: null, created_at: new Date().toISOString(),
+    generated_summary: "A semana foi marcada por revisões nas projeções de safra de soja, oscilação nos preços do milho por pressão externa e avanços em novos defensivos agrícolas. O clima seguiu como ponto de atenção em algumas regiões produtoras.",
+    generated_analysis: "**Tendência:** o mercado de grãos segue sensível a fatores externos, especialmente exportações americanas, o que manteve os preços do milho em queda ao longo da semana.\n\n**Riscos:** a irregularidade das chuvas no Centro-Oeste é o principal ponto de atenção — produtores devem monitorar de perto o desenvolvimento das lavouras.\n\n**Oportunidades:** o lançamento de novos produtos por Syngenta, Corteva e Embrapa reforça o ritmo de inovação tecnológica no setor, com potencial de ganhos de produtividade nas próximas safras.\n\n**Conclusão:** semana de sinais mistos — otimismo na frente tecnológica, cautela na frente climática e de mercado.",
+    edited_summary: null, edited_analysis: null,
+    _articleIds: [0, 1, 2, 3, 4, 5],
+    // PREVIEW: extra analyzed articles from the same week the system
+    // suggests but the operator hasn't included yet — shown unchecked.
+    _extraCandidateIds: [11],
+    highlight_article_ids: [1000, 1002, 1005],
+    publish_url: null,
+  },
+  {
+    id: 2, week_start: isoWeekStart(1), week_end: addDaysIso(isoWeekStart(1), 6),
+    title: "Semana do café recorde",
+    archived: false,
+    status: "published", published_at: new Date(Date.now() - 6 * 86400000).toISOString(), created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+    generated_summary: "Semana de recordes nas exportações de café e avanços em crédito rural para pequenos produtores, equilibrados por alertas de geada tardia no sul do país.",
+    generated_analysis: "**Tendência:** o desempenho forte das exportações de café reforça a competitividade brasileira no mercado internacional.\n\n**Riscos:** o alerta de geada tardia no sul exige atenção redobrada de produtores da região.\n\n**Conclusão:** balanço positivo na semana, com destaque para o desempenho comercial do setor.",
+    edited_summary: "<p>Semana de recordes nas exportações de café e avanços em crédito rural para pequenos produtores, equilibrados por alertas de geada tardia no sul do país. <b>(revisado pelo operador)</b></p>",
+    edited_analysis: null,
+    _articleIds: [7, 9, 10],
+    _extraCandidateIds: [6, 8],
+    highlight_article_ids: [1007, 1010],
+    // PREVIEW: shows what the "Ver no portal" link looks like once a bulletin has actually been published there.
+    publish_url: "https://portal.liagro.com.br/boletins/semana-" + isoWeekStart(1),
+  },
+];
+
+let MOCK_SOURCE_ID = 100;
+const MOCK_SOURCES = [
+  { id: 1, key: "embrapa", name: "Embrapa", url: "https://www.embrapa.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil" },
+  { id: 2, key: "agrolink", name: "Agrolink", url: "https://www.agrolink.com.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil" },
+  { id: 3, key: "reuters", name: "Reuters", url: "https://www.reuters.com/", feed_url: null, status: "active", implemented: true, notes: null, country: "Internacional" },
+  { id: 4, key: "bayer", name: "Bayer", url: "https://www.bayer.com/", feed_url: null, status: "paused", implemented: true, notes: "Pausado temporariamente — muitas notícias fora do escopo de Crop Science.", country: "Alemanha" },
+  { id: 5, key: "cnn_brasil", name: "CNN Brasil", url: "https://www.cnnbrasil.com.br/", feed_url: null, status: "archived", implemented: true, notes: "Baixo volume de notícias relevantes de agro.", country: "Brasil" },
+  { id: 6, key: "noticias_agricolas", name: "Notícias Agrícolas", url: "https://www.noticiasagricolas.com.br/", feed_url: "https://www.noticiasagricolas.com.br/rss", status: "pending", implemented: false, notes: "Sugerido pela operadora — tem feed RSS, aguardando implementação do coletor.", country: null },
+];
+
+const MOCK_SCHEDULE = { id: 1, enabled: true, frequency: "daily", last_run_at: new Date(Date.now() - 14 * 3600000).toISOString() };
+
+async function api(action, params = {}) {
+  await new Promise(r => setTimeout(r, 250)); // simulate network latency
+
+  switch (action) {
+    case "overview":
+      return {
+        total_articles: 2460,
+        pending_analysis: 1802,
+        last_analysis_at: new Date(Date.now() - 14 * 3600000).toISOString(),
+        timeframes: {
+          "24h": { new_articles: 175, analyzed: 40, sentiment: { positivo: 18, negativo: 9, neutro: 13 } },
+          "7d":  { new_articles: 384, analyzed: 95, sentiment: { positivo: 42, negativo: 21, neutro: 32 } },
+          "30d": { new_articles: 1252, analyzed: 210, sentiment: { positivo: 88, negativo: 51, neutro: 71 } },
+        },
+      };
+
+    case "pending_estimate":
+      return {
+        estimates: {
+          all:  { count: 1802, estimated_cost_usd: 9.92, cost_per_article_usd: 0.0055 },
+          "30d": { count: 1042, estimated_cost_usd: 5.73, cost_per_article_usd: 0.0055 },
+          "7d":  { count: 289,  estimated_cost_usd: 1.59, cost_per_article_usd: 0.0055 },
+          // PREVIEW: 0 here on purpose, to show the "Processar" button locked
+          // (disabled + dimmed) when there's nothing left to analyze in scope.
+          "24h": { count: 0, estimated_cost_usd: 0, cost_per_article_usd: 0.0055 },
+        },
+      };
+
+    case "pending":
+      return { articles: Array.from({ length: 6 }, (_, i) => mockArticle(i)) };
+
+    case "analyze_one":
+      return { status: "analyzed", category: "mercado", sentiment: "positivo" };
+
+    case "analyze_pending":
+      return { analyzed: 15, skipped: 1, errors: 0, remaining: Math.max(0, (params._remaining ?? 40) - 16), scope: params.scope };
+
+    case "articles": {
+      const start = params.offset || 0;
+      let articles = Array.from({ length: params.limit || 20 }, (_, i) => mockArticle(start + i));
+      if (params.keyword) articles = articles.filter(a => a.matched_keywords.includes(params.keyword));
+      return { articles };
+    }
+
+    case "search":
+      // Mix of indices already covered by the bulletins' _articleIds (0-8ish)
+      // and higher ones that aren't, so the preview demonstrates both "já
+      // incluído" and a genuinely new article being added to a bulletin.
+      return { articles: [0, 2, 18, 25].map(i => mockArticle(i)) };
+
+    case "article": {
+      const a = mockArticle(Number(params.id) - 1000 || 0);
+      return {
+        article: { ...a, content: "Este é um texto de exemplo representando o conteúdo completo do artigo, usado apenas para visualizar o layout do painel. " .repeat(20) },
+        analysis: a._sentiment ? {
+          sentiment: a._sentiment,
+          summary: MOCK_SUMMARIES[a._sentiment],
+          analysis_text: `**Resumo:** ${MOCK_SUMMARIES[a._sentiment]}\n\n**Impacto:** Texto de exemplo descrevendo o impacto para o setor.\n\n**Contexto:** Texto de exemplo com contexto adicional sobre a notícia.\n\n**Pontos de Atenção:** Texto de exemplo destacando pontos que merecem acompanhamento.`,
+        } : null,
+      };
+    }
+
+    case "analyses":
+      return {
+        analyses: Array.from({ length: params.limit || 20 }, (_, i) => {
+          const a = mockArticle((params.offset || 0) + i);
+          const d = new Date(Date.now() - i * 5 * 3600000);
+          return {
+            id: 5000 + i, analyzed_at: d.toISOString(), sentiment: a._sentiment,
+            summary: MOCK_SUMMARIES[a._sentiment], model_used: "claude-haiku-4-5-20251001",
+            articles: { id: a.id, title: a.title, source: a.source, url: a.url },
+          };
+        }),
+      };
+
+    case "bulletins":
+      return { bulletins: MOCK_BULLETINS.map(b => ({ ...b, article_count: b._articleIds.length })) };
+
+    case "bulletin": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id)) || MOCK_BULLETINS[0];
+      return {
+        bulletin: b,
+        articles: b._articleIds.map(i => {
+          const a = mockArticle(i);
+          return { id: a.id, title: a.title, source: a.source, url: a.url, published_at: a.published_at, scraped_at: a.scraped_at, summary: MOCK_SUMMARIES[a._sentiment], sentiment: a._sentiment };
+        }),
+      };
+    }
+
+    case "save_bulletin": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (b) { b.title = params.title ?? null; b.edited_summary = params.edited_summary; b.edited_analysis = params.edited_analysis; }
+      return { bulletin: b };
+    }
+
+    case "bulletin_candidates": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (!b) return { candidates: [] };
+      const allIdx = [...new Set([...(b._articleIds || []), ...(b._extraCandidateIds || [])])];
+      const includedSet = new Set((b._articleIds || []).map(i => 1000 + i));
+      const highlightSet = new Set(b.highlight_article_ids || []);
+      const candidates = allIdx.map(i => {
+        const a = mockArticle(i);
+        return {
+          id: a.id, title: a.title, source: a.source, url: a.url,
+          published_at: a.published_at, scraped_at: a.scraped_at,
+          sentiment: a._sentiment,
+          included: includedSet.has(a.id),
+          highlight: highlightSet.has(a.id),
+        };
+      }).sort((x, y) => new Date(y.published_at) - new Date(x.published_at));
+      return { candidates };
+    }
+
+    case "save_bulletin_selection": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (b) {
+        const articleIds = params.article_ids || [];
+        b._articleIds = articleIds.map(id => id - 1000);
+        b.highlight_article_ids = (params.highlight_article_ids || []).filter(id => articleIds.includes(id));
+      }
+      return { bulletin: b };
+    }
+
+    case "publish_bulletin": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (b) { b.status = "published"; b.published_at = new Date().toISOString(); }
+      return { bulletin: b };
+    }
+
+    case "archive_bulletin": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (b) b.archived = params.archived;
+      return { bulletin: b };
+    }
+
+    case "delete_bulletin": {
+      const idx = MOCK_BULLETINS.findIndex(x => x.id === Number(params.id));
+      if (idx !== -1) MOCK_BULLETINS.splice(idx, 1);
+      return { status: "deleted" };
+    }
+
+    case "sources":
+      return { sources: MOCK_SOURCES.slice().sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)) };
+
+    case "add_source": {
+      const key = (params.name || "site").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "site";
+      const source = {
+        id: ++MOCK_SOURCE_ID, key, name: params.name, url: params.url || null,
+        feed_url: params.feed_url || null, notes: params.notes || null,
+        country: params.country || null,
+        status: "pending", implemented: false,
+      };
+      MOCK_SOURCES.push(source);
+      return { source };
+    }
+
+    case "update_source": {
+      const s = MOCK_SOURCES.find(x => x.id === Number(params.id));
+      if (!s) return { error: "Fonte não encontrada" };
+      if (params.status === "active" && !s.implemented) {
+        return { error: "Este site ainda não tem um scraper implementado — não é possível ativar." };
+      }
+      if (params.status !== undefined) s.status = params.status;
+      if (params.name !== undefined) s.name = params.name;
+      if (params.url !== undefined) s.url = params.url;
+      if (params.feed_url !== undefined) s.feed_url = params.feed_url;
+      if (params.notes !== undefined) s.notes = params.notes;
+      if (params.country !== undefined) s.country = params.country || null;
+      return { source: s };
+    }
+
+    case "delete_source": {
+      const idx = MOCK_SOURCES.findIndex(x => x.id === Number(params.id));
+      if (idx !== -1) MOCK_SOURCES.splice(idx, 1);
+      return { status: "deleted" };
+    }
+
+    case "extract_url":
+      // PREVIEW: no real fetch — returns canned content so the flow can be reviewed end to end.
+      return {
+        title: "Título extraído automaticamente (exemplo)",
+        content: "Conteúdo de exemplo extraído da página informada. Em produção, este texto vem da própria página — revise e edite antes de salvar.",
+      };
+
+    case "add_manual_article":
+      return { article: { id: 9000 + Math.floor(Math.random() * 1000), url: params.url, title: params.title, source: "manual" } };
+
+    case "add_manual_article_full":
+      return {
+        article: {
+          id: 9500 + Math.floor(Math.random() * 1000), url: params.url || null, title: params.title,
+          content: params.content, source: params.source, published_at: params.published_at,
+          matched_keywords: params.keywords || [],
+        },
+      };
+
+    case "analyzer_schedule":
+      return { schedule: MOCK_SCHEDULE };
+
+    case "update_analyzer_schedule": {
+      if (params.enabled !== undefined) MOCK_SCHEDULE.enabled = params.enabled;
+      if (params.frequency !== undefined) MOCK_SCHEDULE.frequency = params.frequency;
+      return { schedule: MOCK_SCHEDULE };
+    }
+
+    case "keywords":
+      return { keywords: MOCK_KEYWORDS.slice().sort((a, b) => a.category.localeCompare(b.category) || a.term.localeCompare(b.term)) };
+
+    case "add_keyword": {
+      const keyword = { id: ++MOCK_KEYWORD_ID, term: params.term, category: params.category || "geral" };
+      MOCK_KEYWORDS.push(keyword);
+      return { keyword };
+    }
+
+    case "delete_keyword": {
+      const idx = MOCK_KEYWORDS.findIndex(x => x.id === Number(params.id));
+      if (idx !== -1) MOCK_KEYWORDS.splice(idx, 1);
+      return { status: "deleted" };
+    }
+
+    default:
+      return {};
+  }
+}
+
+// ---------- Portal link (header) ----------
+(function renderPortalLink() {
+  const el = document.getElementById("portal-link");
+  if (PORTAL_URL) {
+    el.href = PORTAL_URL;
+  } else {
+    el.href = "#";
+    el.classList.add("disabled");
+    el.textContent = "Portal (não configurado)";
+    el.onclick = (e) => e.preventDefault();
+  }
+})();
+
+// ---------- Overview ----------
+function fmtDateTime(iso) {
+  if (!iso) return "nunca";
+  const d = new Date(iso);
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function nextAnalyzerRun() {
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), ANALYZER_CRON_UTC_HOUR, ANALYZER_CRON_UTC_MINUTE));
+  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+  return next.toISOString();
+}
+
+function sentimentRow(s) {
+  if (!s) return "";
+  return `<div class="sentiment-row">
+    <span class="badge positivo">+ ${s.positivo || 0}</span>
+    <span class="badge negativo">- ${s.negativo || 0}</span>
+    <span class="badge neutro">= ${s.neutro || 0}</span>
+  </div>`;
+}
+
+// Which sentiment "wins" the 7d semáforo card. Ties are broken toward the
+// more cautious signal (negativo > neutro > positivo) so the light never
+// quietly shows green when there's an equally-sized negative cluster.
+function dominantSentiment(s) {
+  if (!s) return null;
+  const counts = { negativo: s.negativo || 0, neutro: s.neutro || 0, positivo: s.positivo || 0 };
+  const max = Math.max(counts.negativo, counts.neutro, counts.positivo);
+  if (max === 0) return null; // no articles analyzed in the last 7 days
+  if (counts.negativo === max) return "negativo";
+  if (counts.neutro === max) return "neutro";
+  return "positivo";
+}
+
+// Simple single-color circle — lit color reflects the dominant sentiment.
+function semaforoSvg(dominant) {
+  const colors = { negativo: "#c62828", neutro: "#f2b100", positivo: "#2e7d32" };
+  const fill = colors[dominant] || "#9aa0a6"; // gray = no data
+  const glow = dominant ? ` style="filter:drop-shadow(0 0 5px ${fill})"` : "";
+  return `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="20" cy="20" r="16" fill="${fill}"${glow}></circle>
+  </svg>`;
+}
+
+const SEMAFORO_LABELS = {
+  negativo: "Predominância negativa (7d)",
+  neutro: "Predominância neutra (7d)",
+  positivo: "Predominância positiva (7d)",
+};
+
+function renderOverview(o) {
+  const dominant = dominantSentiment(o.timeframes["7d"].sentiment);
+  const semaforoCard = `
+    <div class="card semaforo-card">
+      <h3>Semáforo</h3>
+      <div class="semaforo-row">
+        ${semaforoSvg(dominant)}
+        <span class="semaforo-label">${SEMAFORO_LABELS[dominant] || "Sem artigos nos últimos 7 dias"}</span>
+      </div>
+    </div>`;
+  const cards = [
+    { label: "Últimas 24h", value: o.timeframes["24h"].new_articles, sentiment: o.timeframes["24h"].sentiment },
+    { label: "Últimos 7 dias", value: o.timeframes["7d"].new_articles, sentiment: o.timeframes["7d"].sentiment },
+    { label: "Últimos 30 dias", value: o.timeframes["30d"].new_articles, sentiment: o.timeframes["30d"].sentiment },
+    { label: "Total de artigos", value: o.total_articles, sentiment: null },
+  ];
+  document.getElementById("overview-cards").innerHTML = semaforoCard + cards.map(c => `
+    <div class="card">
+      <h3>${c.label}</h3>
+      <div class="big">${c.value}</div>
+      ${sentimentRow(c.sentiment)}
+    </div>
+  `).join("");
+
+  document.getElementById("header-meta").textContent =
+    `Última análise: ${fmtDateTime(o.last_analysis_at)}  •  Próxima análise agendada: ${fmtDateTime(nextAnalyzerRun())}`;
+
+  document.getElementById("pending-count").textContent = `${o.pending_analysis} artigo(s) aguardando análise`;
+}
+
+async function refreshOverview() {
+  const o = await api("overview");
+  renderOverview(o);
+  return o;
+}
+
+// ---------- Pending ----------
+async function loadPending() {
+  const { articles } = await api("pending", { limit: 50 });
+  const list = document.getElementById("pending-list");
+  if (!articles.length) {
+    list.innerHTML = `<li class="article-sub">Nenhum artigo pendente. 🎉</li>`;
+    return;
+  }
+  list.innerHTML = articles.map(a => `
+    <li class="article-item" data-id="${a.id}">
+      <div>
+        <div class="article-title">${escapeHtml(a.title)}</div>
+        <div class="article-sub">${a.source} • ${fmtDateTime(a.published_at || a.scraped_at)}</div>
+      </div>
+      <button class="secondary analyze-one-btn" data-id="${a.id}">Analisar agora</button>
+    </li>
+  `).join("");
+
+  list.querySelectorAll(".analyze-one-btn").forEach(btn => {
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.textContent = "Analisando…";
+      await api("analyze_one", { article_id: Number(btn.dataset.id) });
+      btn.closest("li").style.opacity = "0.4";
+      btn.textContent = "Analisado ✓";
+    };
+  });
+}
+
+const SCOPE_LABELS = { all: "Tudo", "30d": "Últimos 30 dias", "7d": "Últimos 7 dias", "24h": "Últimas 24h" };
+const scopeCurrency = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "USD" });
+
+async function loadScopeEstimates() {
+  const tbody = document.getElementById("scope-table-body");
+  const { estimates } = await api("pending_estimate");
+  tbody.innerHTML = Object.entries(SCOPE_LABELS).map(([scope, label]) => {
+    const e = estimates[scope];
+    return `
+      <tr data-scope="${scope}">
+        <td style="padding:6px 4px;">${label}</td>
+        <td style="padding:6px 4px;">${e.count}</td>
+        <td style="padding:6px 4px;">${scopeCurrency(e.estimated_cost_usd)}</td>
+        <td style="padding:6px 4px;">
+          <button class="secondary process-scope-btn" data-scope="${scope}" ${e.count === 0 ? "disabled" : ""}>Processar</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll(".process-scope-btn").forEach(btn => {
+    btn.onclick = () => processScope(btn.dataset.scope);
+  });
+}
+
+async function processScope(scope) {
+  const status = document.getElementById("pending-status");
+  document.querySelectorAll(".process-scope-btn").forEach(b => b.disabled = true);
+
+  let remaining = 40, totalAnalyzed = 0, totalSkipped = 0;
+  while (remaining > 0) {
+    const r = await api("analyze_pending", { scope, _remaining: remaining });
+    totalAnalyzed += r.analyzed;
+    totalSkipped += r.skipped;
+    remaining = r.remaining;
+    status.textContent = `[${SCOPE_LABELS[scope]}] ${totalAnalyzed} analisados, ${totalSkipped} ignorados (conteúdo curto), ${remaining} restantes…`;
+  }
+  status.textContent = `[${SCOPE_LABELS[scope]}] Concluído (exemplo) — ${totalAnalyzed} analisados, ${totalSkipped} ignorados.`;
+  document.querySelectorAll(".process-scope-btn").forEach(b => b.disabled = false);
+}
+
+// ---------- Scheduler (Análise Automática) ----------
+const FREQUENCY_LABELS = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" };
+
+async function loadScheduler() {
+  const { schedule } = await api("analyzer_schedule");
+  renderScheduler(schedule);
+}
+
+function renderScheduler(schedule) {
+  const activateBtn = document.getElementById("scheduler-activate-btn");
+  const pauseBtn = document.getElementById("scheduler-pause-btn");
+  const freqSelect = document.getElementById("scheduler-frequency-select");
+  const warning = document.getElementById("scheduler-daily-warning");
+  const runInfo = document.getElementById("scheduler-run-info");
+
+  activateBtn.classList.toggle("current", !!schedule.enabled);
+  pauseBtn.classList.toggle("current", !schedule.enabled);
+  freqSelect.value = schedule.frequency || "daily";
+  warning.classList.toggle("hidden", freqSelect.value !== "daily");
+
+  const last = schedule.last_run_at ? fmtDateTime(schedule.last_run_at) : "nunca";
+  runInfo.textContent = `Última execução automática: ${last}  •  Verificação diária às ${String(ANALYZER_CRON_UTC_HOUR).padStart(2, "0")}:${String(ANALYZER_CRON_UTC_MINUTE).padStart(2, "0")} UTC (só processa de fato quando a periodicidade escolhida permitir).`;
+}
+
+async function setSchedulerEnabled(enabled) {
+  const statusMsg = document.getElementById("scheduler-status-msg");
+  const { schedule } = await api("update_analyzer_schedule", { enabled });
+  renderScheduler(schedule);
+  statusMsg.textContent = schedule.enabled ? "Análise automática retomada (exemplo)." : "Análise automática pausada (exemplo).";
+}
+
+document.getElementById("scheduler-activate-btn").onclick = () => setSchedulerEnabled(true);
+document.getElementById("scheduler-pause-btn").onclick = () => setSchedulerEnabled(false);
+
+document.getElementById("scheduler-frequency-select").onchange = async (e) => {
+  const statusMsg = document.getElementById("scheduler-status-msg");
+  const warning = document.getElementById("scheduler-daily-warning");
+  warning.classList.toggle("hidden", e.target.value !== "daily");
+  const { schedule } = await api("update_analyzer_schedule", { frequency: e.target.value });
+  renderScheduler(schedule);
+  statusMsg.textContent = `Periodicidade alterada para ${FREQUENCY_LABELS[schedule.frequency]} (exemplo).`;
+};
+
+// ---------- Manual article (Adicionar artigo manualmente) ----------
+let manualExtractedUrl = null;
+
+document.getElementById("manual-extract-btn").onclick = async () => {
+  const urlInput = document.getElementById("manual-url-input");
+  const status = document.getElementById("manual-article-status");
+  const url = urlInput.value.trim();
+  if (!url) { status.textContent = "Cole um link primeiro."; return; }
+
+  const btn = document.getElementById("manual-extract-btn");
+  btn.disabled = true;
+  btn.textContent = "Buscando…";
+  status.textContent = "";
+  const { title, content } = await api("extract_url", { url });
+  manualExtractedUrl = url;
+  document.getElementById("manual-title-input").value = title || "";
+  document.getElementById("manual-content-input").value = content || "";
+  document.getElementById("manual-article-form").classList.remove("hidden");
+  btn.disabled = false;
+  btn.textContent = "Buscar conteúdo";
+};
+
+document.getElementById("manual-cancel-btn").onclick = () => {
+  manualExtractedUrl = null;
+  document.getElementById("manual-url-input").value = "";
+  document.getElementById("manual-title-input").value = "";
+  document.getElementById("manual-content-input").value = "";
+  document.getElementById("manual-article-form").classList.add("hidden");
+  document.getElementById("manual-article-status").textContent = "";
+};
+
+document.getElementById("manual-save-btn").onclick = async () => {
+  const status = document.getElementById("manual-article-status");
+  const title = document.getElementById("manual-title-input").value.trim();
+  const content = document.getElementById("manual-content-input").value.trim();
+  if (!manualExtractedUrl || !title || !content) {
+    status.textContent = "Preencha URL, título e conteúdo antes de salvar.";
+    return;
+  }
+  const btn = document.getElementById("manual-save-btn");
+  btn.disabled = true;
+  status.textContent = "Salvando…";
+  await api("add_manual_article", { url: manualExtractedUrl, title, content });
+  document.getElementById("manual-cancel-btn").click();
+  status.textContent = "Artigo adicionado (exemplo) — já apareceria na lista de pendentes.";
+  btn.disabled = false;
+};
+
+// ---------- Manual article — fully manual, no URL/scraping ----------
+function populateManualSourceList() {
+  const dl = document.getElementById("manual-full-source-list");
+  dl.innerHTML = SOURCES.filter(s => s !== "manual").map(s => `<option value="${escapeHtml(s)}">`).join("");
+}
+
+function populateManualKeywordsSelect() {
+  const sel = document.getElementById("manual-full-keywords-select");
+  if (!sel) return;
+  const previouslySelected = new Set(Array.from(sel.selectedOptions).map(o => o.value));
+  sel.innerHTML = allKeywords.map(k =>
+    `<option value="${escapeHtml(k.term)}">${escapeHtml(k.term)} (${KEYWORD_CATEGORY_LABELS[k.category] || k.category})</option>`
+  ).join("");
+  Array.from(sel.options).forEach(o => { if (previouslySelected.has(o.value)) o.selected = true; });
+}
+
+document.getElementById("manual-full-toggle-btn").onclick = () => {
+  document.getElementById("manual-full-form").classList.remove("hidden");
+};
+
+document.getElementById("manual-full-cancel-btn").onclick = () => {
+  document.getElementById("manual-full-form").classList.add("hidden");
+  ["manual-full-title-input", "manual-full-content-input", "manual-full-date-input", "manual-full-source-input", "manual-full-url-input"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  Array.from(document.getElementById("manual-full-keywords-select").options).forEach(o => { o.selected = false; });
+  document.getElementById("manual-full-status").textContent = "";
+};
+
+document.getElementById("manual-full-save-btn").onclick = async () => {
+  const status = document.getElementById("manual-full-status");
+  const title = document.getElementById("manual-full-title-input").value.trim();
+  const content = document.getElementById("manual-full-content-input").value.trim();
+  const published_at = document.getElementById("manual-full-date-input").value;
+  const source = document.getElementById("manual-full-source-input").value.trim();
+  const url = document.getElementById("manual-full-url-input").value.trim();
+  const keywords = Array.from(document.getElementById("manual-full-keywords-select").selectedOptions).map(o => o.value);
+  if (!title || !content || !published_at || !source) {
+    status.textContent = "Preencha manchete, conteúdo, data e fonte antes de salvar.";
+    return;
+  }
+  const btn = document.getElementById("manual-full-save-btn");
+  btn.disabled = true;
+  status.textContent = "Salvando…";
+  await api("add_manual_article_full", { title, content, published_at, source, url: url || undefined, keywords });
+  document.getElementById("manual-full-cancel-btn").click();
+  status.textContent = "Artigo adicionado (exemplo) — já apareceria na lista de pendentes.";
+  btn.disabled = false;
+};
+
+// ---------- Article browser ----------
+function populateSourceFilter() {
+  const sel = document.getElementById("source-filter");
+  SOURCES.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+  sel.onchange = () => { currentSourceFilter = sel.value; loadArticles(true); };
+}
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderArticleList(articles, append) {
+  const list = document.getElementById("article-list");
+  const html = articles.map(a => `
+    <li class="article-item">
+      <div>
+        <div class="article-title" data-id="${a.id}">${escapeHtml(a.title)}</div>
+        <div class="article-sub">${a.source} • ${fmtDateTime(a.published_at || a.scraped_at)}${a.category ? " • " + a.category : ""}${a.matched_keywords && a.matched_keywords.length ? " • 🏷️ " + a.matched_keywords.map(escapeHtml).join(", ") : ""}</div>
+      </div>
+    </li>
+  `).join("");
+  list.innerHTML = append ? list.innerHTML + html : html;
+  list.querySelectorAll(".article-title").forEach(el => {
+    el.onclick = () => openArticle(Number(el.dataset.id));
+  });
+}
+
+async function loadArticles(reset) {
+  if (reset) { articleOffset = 0; }
+  let result;
+  if (currentSearchQuery) {
+    result = await api("search", { query: currentSearchQuery, limit: 30 });
+  } else {
+    result = await api("articles", { source: currentSourceFilter || undefined, keyword: currentKeywordFilter || undefined, limit: 20, offset: articleOffset });
+    articleOffset += 20;
+  }
+  renderArticleList(result.articles, !reset);
+}
+
+document.getElementById("search-btn").onclick = () => {
+  currentSearchQuery = document.getElementById("search-input").value.trim();
+  loadArticles(true);
+};
+document.getElementById("clear-search-btn").onclick = () => {
+  currentSearchQuery = "";
+  document.getElementById("search-input").value = "";
+  loadArticles(true);
+};
+document.getElementById("load-more-btn").onclick = () => loadArticles(false);
+
+// ---------- Analyses produced ----------
+let analysesOffset = 0;
+
+function renderAnalysesList(analyses, append) {
+  const list = document.getElementById("analyses-list");
+  const html = analyses.map(a => {
+    const article = a.articles || {};
+    return `
+      <li class="article-item">
+        <div>
+          <div class="article-title" data-id="${article.id}">${escapeHtml(article.title || "(artigo removido)")}</div>
+          <div class="article-sub">
+            ${article.source || ""} • analisado em ${fmtDateTime(a.analyzed_at)}
+            ${a.sentiment ? ` • <span class="badge ${a.sentiment}">${a.sentiment}</span>` : ""}
+          </div>
+          ${a.summary ? `<div class="article-sub">${escapeHtml(a.summary)}</div>` : ""}
+        </div>
+      </li>
+    `;
+  }).join("");
+  list.innerHTML = append ? list.innerHTML + html : html;
+  list.querySelectorAll(".article-title").forEach(el => {
+    if (el.dataset.id) el.onclick = () => openArticle(Number(el.dataset.id));
+  });
+}
+
+async function loadAnalyses(reset) {
+  if (reset) { analysesOffset = 0; }
+  const { analyses } = await api("analyses", { limit: 20, offset: analysesOffset });
+  analysesOffset += 20;
+  renderAnalysesList(analyses, !reset);
+}
+
+document.getElementById("analyses-load-more-btn").onclick = () => loadAnalyses(false);
+
+// ---------- Sources (Fontes) ----------
+// Curated list for the "País" tag — free text in the database (migration 011),
+// but a fixed select in the UI for consistency. "Internacional" covers wire
+// services and global corporate newsrooms that aren't tied to one country;
+// "Outro" is the catch-all for anything not in this (long, but not
+// exhaustive) list.
+const COUNTRY_OPTIONS = [
+  "Internacional",
+  "Afeganistão", "África do Sul", "Albânia", "Alemanha", "Andorra", "Angola",
+  "Antígua e Barbuda", "Arábia Saudita", "Argélia", "Argentina", "Armênia",
+  "Austrália", "Áustria", "Azerbaijão", "Bahamas", "Bahrein", "Bangladesh",
+  "Barbados", "Bélgica", "Belize", "Benin", "Bielorrússia", "Bolívia",
+  "Bósnia e Herzegovina", "Botsuana", "Brasil", "Brunei", "Bulgária",
+  "Burkina Faso", "Burundi", "Butão", "Cabo Verde", "Camarões", "Camboja",
+  "Canadá", "Catar", "Cazaquistão", "Chade", "Chile", "China", "Chipre",
+  "Colômbia", "Comores", "Coreia do Norte", "Coreia do Sul",
+  "Costa do Marfim", "Costa Rica", "Croácia", "Cuba", "Dinamarca",
+  "Djibuti", "Dominica", "Egito", "El Salvador",
+  "Emirados Árabes Unidos", "Equador", "Eritreia", "Eslováquia",
+  "Eslovênia", "Espanha", "Estados Unidos", "Estônia", "Eswatini",
+  "Etiópia", "Fiji", "Filipinas", "Finlândia", "França", "Gabão",
+  "Gâmbia", "Gana", "Geórgia", "Granada", "Grécia", "Guatemala",
+  "Guiana", "Guiné", "Guiné Equatorial", "Guiné-Bissau", "Haiti",
+  "Holanda (Países Baixos)", "Honduras", "Hungria", "Iêmen",
+  "Ilhas Marshall", "Ilhas Salomão", "Índia", "Indonésia", "Irã",
+  "Iraque", "Irlanda", "Islândia", "Israel", "Itália", "Jamaica",
+  "Japão", "Jordânia", "Kiribati", "Kosovo", "Kuwait", "Laos", "Lesoto",
+  "Letônia", "Líbano", "Libéria", "Líbia", "Liechtenstein", "Lituânia",
+  "Luxemburgo", "Macedônia do Norte", "Madagascar", "Malásia", "Malawi",
+  "Maldivas", "Mali", "Malta", "Marrocos", "Maurícia", "Mauritânia",
+  "México", "Mianmar", "Micronésia", "Moçambique", "Moldávia", "Mônaco",
+  "Mongólia", "Montenegro", "Namíbia", "Nauru", "Nepal", "Nicarágua",
+  "Níger", "Nigéria", "Noruega", "Nova Zelândia", "Omã", "Palau",
+  "Panamá", "Papua-Nova Guiné", "Paquistão", "Paraguai", "Peru",
+  "Polônia", "Portugal", "Quênia", "Quirguistão", "Reino Unido",
+  "República Centro-Africana", "República Democrática do Congo",
+  "República Dominicana", "República do Congo", "República Tcheca",
+  "Romênia", "Ruanda", "Rússia", "Samoa", "San Marino", "Santa Lúcia",
+  "São Cristóvão e Névis", "São Tomé e Príncipe",
+  "São Vicente e Granadinas", "Seicheles", "Senegal", "Serra Leoa",
+  "Sérvia", "Singapura", "Síria", "Somália", "Sri Lanka", "Sudão",
+  "Sudão do Sul", "Suécia", "Suíça", "Suriname", "Tailândia", "Taiwan",
+  "Tajiquistão", "Tanzânia", "Timor-Leste", "Togo", "Tonga",
+  "Trinidad e Tobago", "Tunísia", "Turcomenistão", "Turquia", "Tuvalu",
+  "Ucrânia", "Uganda", "Uruguai", "Uzbequistão", "Vanuatu", "Vaticano",
+  "Venezuela", "Vietnã", "Zâmbia", "Zimbábue",
+  "Outro",
+];
+
+function countryOptionsHtml(selected) {
+  return `<option value="">—</option>` + COUNTRY_OPTIONS.map(c =>
+    `<option value="${escapeHtml(c)}" ${selected === c ? "selected" : ""}>${escapeHtml(c)}</option>`
+  ).join("");
+}
+
+async function loadSources() {
+  const list = document.getElementById("sources-list");
+  const status = document.getElementById("sources-status");
+  const { sources } = await api("sources");
+  if (!sources.length) {
+    list.innerHTML = `<li class="article-sub">Nenhuma fonte cadastrada ainda.</li>`;
+    return;
+  }
+  list.innerHTML = sources.map(s => `
+    <li class="article-item ${s.implemented ? "source-implemented" : "source-unimplemented"}" data-id="${s.id}">
+      <div>
+        <div class="article-title">
+          ${escapeHtml(s.name)}
+          ${s.status === "pending" ? '<span class="badge pendente">pendente</span>' : ''}
+          ${!s.implemented ? '<span class="badge pendente">sem coletor implementado</span>' : ''}
+          ${s.country ? `<span class="badge country">${escapeHtml(s.country)}</span>` : ''}
+        </div>
+        <div class="article-sub">${s.url ? escapeHtml(s.url) : "sem URL cadastrada"}${s.feed_url ? " • RSS: " + escapeHtml(s.feed_url) : ""}</div>
+        ${s.notes ? `<div class="article-sub">${escapeHtml(s.notes)}</div>` : ""}
+      </div>
+      <div class="row" style="gap:6px;">
+        <div class="status-icon-group">
+          <button class="status-icon-btn icon-active ${s.status === "active" ? "current" : ""}" data-id="${s.id}" data-status="active" title="Ativar">▶</button>
+          <button class="status-icon-btn icon-paused ${s.status === "paused" ? "current" : ""}" data-id="${s.id}" data-status="paused" title="Pausar">⏸</button>
+          <button class="status-icon-btn icon-archived ${s.status === "archived" ? "current" : ""}" data-id="${s.id}" data-status="archived" title="Arquivar">⏹</button>
+          <span class="icon-divider"></span>
+          <button class="status-icon-btn icon-delete source-delete-btn" data-id="${s.id}" title="Excluir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+          </button>
+        </div>
+        <select class="source-country-select" data-id="${s.id}">${countryOptionsHtml(s.country || "")}</select>
+      </div>
+    </li>
+  `).join("");
+
+  list.querySelectorAll(".status-icon-btn:not(.icon-delete)").forEach(btn => {
+    btn.onclick = async () => {
+      btn.disabled = true;
+      const result = await api("update_source", { id: Number(btn.dataset.id), status: btn.dataset.status });
+      status.textContent = result.error ? "Erro: " + result.error : "Status atualizado (exemplo).";
+      await loadSources();
+    };
+  });
+
+  list.querySelectorAll(".source-country-select").forEach(sel => {
+    sel.onchange = async () => {
+      sel.disabled = true;
+      const result = await api("update_source", { id: Number(sel.dataset.id), country: sel.value });
+      status.textContent = result.error ? "Erro: " + result.error : "País atualizado (exemplo).";
+      await loadSources();
+    };
+  });
+
+  list.querySelectorAll(".source-delete-btn").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("Excluir definitivamente esta fonte da lista de acompanhamento? (o código do coletor, se houver, e os artigos já coletados não são afetados)")) return;
+      btn.disabled = true;
+      await api("delete_source", { id: Number(btn.dataset.id) });
+      status.textContent = "Fonte excluída (exemplo).";
+      await loadSources();
+    };
+  });
+}
+
+document.getElementById("source-country-input").innerHTML = countryOptionsHtml("");
+
+document.getElementById("add-source-btn").onclick = () => {
+  document.getElementById("add-source-form").classList.remove("hidden");
+};
+
+document.getElementById("source-cancel-btn").onclick = () => {
+  document.getElementById("add-source-form").classList.add("hidden");
+  ["source-name-input", "source-url-input", "source-feed-input", "source-notes-input"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("source-country-input").value = "";
+  document.getElementById("sources-status").textContent = "";
+};
+
+document.getElementById("source-save-btn").onclick = async () => {
+  const status = document.getElementById("sources-status");
+  const name = document.getElementById("source-name-input").value.trim();
+  const url = document.getElementById("source-url-input").value.trim();
+  const feed_url = document.getElementById("source-feed-input").value.trim();
+  const notes = document.getElementById("source-notes-input").value.trim();
+  const country = document.getElementById("source-country-input").value;
+  if (!name) { status.textContent = "Informe ao menos o nome do site."; return; }
+
+  const btn = document.getElementById("source-save-btn");
+  btn.disabled = true;
+  status.textContent = "Adicionando…";
+  await api("add_source", { name, url: url || undefined, feed_url: feed_url || undefined, notes: notes || undefined, country: country || undefined });
+  document.getElementById("source-cancel-btn").click();
+  status.textContent = "Site cadastrado (exemplo) — fica pendente até um coletor ser implementado para ele.";
+  await loadSources();
+  btn.disabled = false;
+};
+
+// ---------- Keywords (Palavras-chave) ----------
+const KEYWORD_CATEGORY_LABELS = { cultura: "Cultura", insumo: "Insumo", empresa: "Empresa", regional: "Regional", geral: "Geral" };
+let allKeywords = [];
+
+function populateKeywordFilter() {
+  const sel = document.getElementById("keyword-filter");
+  const previous = sel.value;
+  sel.innerHTML = `<option value="">Todas as palavras-chave</option>` +
+    allKeywords.map(k => `<option value="${escapeHtml(k.term)}">${escapeHtml(k.term)}</option>`).join("");
+  sel.value = previous;
+  sel.onchange = () => { currentKeywordFilter = sel.value; loadArticles(true); };
+}
+
+async function loadKeywords() {
+  const list = document.getElementById("keywords-list");
+  const status = document.getElementById("keywords-status");
+  const { keywords } = await api("keywords");
+  allKeywords = keywords;
+  populateKeywordFilter();
+  populateManualKeywordsSelect();
+  if (!keywords.length) {
+    list.innerHTML = `<li class="article-sub">Nenhuma palavra-chave cadastrada ainda.</li>`;
+    return;
+  }
+  list.innerHTML = keywords.map(k => `
+    <li class="article-item" data-id="${k.id}">
+      <div class="article-title">
+        ${escapeHtml(k.term)}
+        <span class="badge ${k.category}">${KEYWORD_CATEGORY_LABELS[k.category] || k.category}</span>
+      </div>
+      <div class="status-icon-group">
+        <button class="status-icon-btn icon-delete keyword-delete-btn" data-id="${k.id}" title="Excluir">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+        </button>
+      </div>
+    </li>
+  `).join("");
+
+  list.querySelectorAll(".keyword-delete-btn").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm(`Excluir a palavra-chave "${btn.closest("li").querySelector(".article-title").textContent.trim()}"? Artigos já marcados mantêm a marcação; só deixa de ser aplicada a partir de agora.`)) return;
+      btn.disabled = true;
+      await api("delete_keyword", { id: Number(btn.dataset.id) });
+      status.textContent = "Palavra-chave excluída (exemplo).";
+      await loadKeywords();
+    };
+  });
+}
+
+document.getElementById("add-keyword-btn").onclick = () => {
+  document.getElementById("add-keyword-form").classList.remove("hidden");
+};
+
+document.getElementById("keyword-cancel-btn").onclick = () => {
+  document.getElementById("add-keyword-form").classList.add("hidden");
+  document.getElementById("keyword-term-input").value = "";
+  document.getElementById("keywords-status").textContent = "";
+};
+
+document.getElementById("keyword-save-btn").onclick = async () => {
+  const status = document.getElementById("keywords-status");
+  const term = document.getElementById("keyword-term-input").value.trim();
+  const category = document.getElementById("keyword-category-select").value;
+  if (!term) { status.textContent = "Informe o termo."; return; }
+
+  const btn = document.getElementById("keyword-save-btn");
+  btn.disabled = true;
+  status.textContent = "Adicionando…";
+  await api("add_keyword", { term, category });
+  document.getElementById("keyword-cancel-btn").click();
+  status.textContent = "Palavra-chave adicionada (exemplo) — passa a valer para novos artigos coletados.";
+  await loadKeywords();
+  btn.disabled = false;
+};
+
+// ---------- Weekly bulletin (Boletim Semanal) ----------
+let currentBulletinId = null;
+
+function fmtDateShort(isoDate) {
+  if (!isoDate) return "";
+  const d = new Date(isoDate + "T00:00:00Z");
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+}
+
+// Rich-text editor: two plain contenteditable divs (#bulletin-summary-input /
+// #bulletin-analysis-input) + a tiny toolbar each, using execCommand — the
+// minimum viable HTML formatting the operator asked for (bold/italic/lists).
+// A field's stored value is either plain text (never edited yet, straight
+// from the AI) or HTML (already edited at least once) — htmlForEditor tells
+// the two apart so plain text doesn't get mangled on first load.
+document.querySelectorAll(".rte-toolbar").forEach(toolbar => {
+  const target = document.getElementById(toolbar.dataset.target);
+  toolbar.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => { target.focus(); document.execCommand(btn.dataset.cmd, false, null); };
+  });
+});
+
+function htmlForEditor(value) {
+  const text = value || "";
+  if (/<[a-z][\s\S]*>/i.test(text)) return text; // already HTML (previously edited)
+  return escapeHtml(text).replace(/\n/g, "<br>"); // plain text from the AI — preserve line breaks
+}
+
+async function loadBulletins() {
+  const list = document.getElementById("bulletin-week-list");
+  const { bulletins } = await api("bulletins");
+  if (!bulletins.length) {
+    list.innerHTML = `<li class="article-sub">Nenhum boletim gerado ainda. O primeiro será criado automaticamente na próxima segunda-feira.</li>`;
+    return;
+  }
+  list.innerHTML = bulletins.map(b => `
+    <li class="article-item ${b.archived ? "bulletin-archived" : ""}" data-id="${b.id}">
+      <div>
+        <div class="article-title" data-id="${b.id}">${b.title ? escapeHtml(b.title) : `Semana de ${fmtDateShort(b.week_start)} a ${fmtDateShort(b.week_end)}`}</div>
+        <div class="article-sub">${b.article_count} artigo(s) • ${b.status === "published" ? "Publicado em " + fmtDateTime(b.published_at) : "Rascunho"}${b.archived ? " • Arquivado" : ""}</div>
+      </div>
+      <div class="row" style="gap:6px;">
+        <span class="badge ${b.status === "published" ? "positivo" : "neutro"}">${b.status === "published" ? "publicado" : "rascunho"}</span>
+        <div class="status-icon-group">
+          <button class="status-icon-btn icon-edit" data-id="${b.id}" title="Editar">✎</button>
+          ${b.status !== "published" || b.archived ? `
+          <button class="status-icon-btn icon-publish" data-id="${b.id}" title="Publicar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </button>` : ""}
+          <button class="status-icon-btn icon-archived ${b.archived ? "current" : ""}" data-id="${b.id}" data-current="${b.archived ? "true" : "false"}" title="${b.archived ? "Desarquivar" : "Arquivar"}">⏹</button>
+          <span class="icon-divider"></span>
+          <button class="status-icon-btn icon-delete" data-id="${b.id}" title="Excluir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+          </button>
+        </div>
+      </div>
+    </li>
+  `).join("");
+  list.querySelectorAll(".article-title").forEach(el => {
+    el.onclick = () => openBulletin(Number(el.dataset.id));
+  });
+  list.querySelectorAll(".icon-edit").forEach(btn => {
+    btn.onclick = () => openBulletin(Number(btn.dataset.id));
+  });
+  list.querySelectorAll(".icon-archived").forEach(btn => {
+    btn.onclick = async () => {
+      btn.disabled = true;
+      const next = btn.dataset.current !== "true";
+      await api("archive_bulletin", { id: Number(btn.dataset.id), archived: next });
+      await loadBulletins();
+    };
+  });
+  list.querySelectorAll(".icon-publish").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("Publicar este boletim? (prévia — nenhuma ação real é executada)")) return;
+      btn.disabled = true;
+      await api("publish_bulletin", { id: Number(btn.dataset.id) });
+      await loadBulletins();
+    };
+  });
+  list.querySelectorAll(".icon-delete").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("Excluir definitivamente este boletim? (prévia — nenhuma ação real é executada / os artigos e análises da semana não são afetados)")) return;
+      btn.disabled = true;
+      await api("delete_bulletin", { id: Number(btn.dataset.id) });
+      document.getElementById("bulletin-editor").classList.add("hidden");
+      currentBulletinId = null;
+      await loadBulletins();
+    };
+  });
+  openBulletin(bulletins[0].id);
+}
+
+function bulletinArticleRow(a) {
+  return `
+    <div class="article-title">${a.url ? `<a href="${a.url}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>` : escapeHtml(a.title)}</div>
+    <div class="article-sub">
+      ${a.source || ""} • ${fmtDateTime(a.published_at || a.scraped_at)}
+      ${a.sentiment ? ` • <span class="badge ${a.sentiment}">${a.sentiment}</span>` : ""}
+    </div>
+  `;
+}
+
+// Operator's checkbox picker for "which articles are in the bulletin" and
+// "which of those are highlights". currentCandidates holds the working
+// (unsaved) selection state; nothing is persisted until "Salvar seleção".
+let currentCandidates = [];
+
+async function loadBulletinCandidates(id) {
+  const { candidates } = await api("bulletin_candidates", { id });
+  currentCandidates = candidates;
+  renderBulletinCandidates();
+}
+
+function updateCandidateCount() {
+  const n = currentCandidates.filter(c => c.included).length;
+  document.getElementById("bulletin-article-count").textContent = n;
+}
+
+function renderBulletinCandidates() {
+  const list = document.getElementById("bulletin-candidates-list");
+  if (!currentCandidates.length) {
+    list.innerHTML = `<p class="article-sub">Nenhum artigo encontrado para o período desta semana.</p>`;
+    updateCandidateCount();
+    return;
+  }
+  list.innerHTML = currentCandidates.map(a => `
+    <div class="candidate-row" data-id="${a.id}">
+      <div class="candidate-info">${bulletinArticleRow(a)}</div>
+      <div class="candidate-checks">
+        <label><input type="checkbox" class="candidate-include" data-id="${a.id}" ${a.included ? "checked" : ""}> Incluir</label>
+        <label><input type="checkbox" class="candidate-highlight" data-id="${a.id}" ${a.highlight ? "checked" : ""} ${a.included ? "" : "disabled"}> Destaque</label>
+      </div>
+    </div>
+  `).join("");
+  updateCandidateCount();
+
+  list.querySelectorAll(".candidate-include").forEach(cb => {
+    cb.onchange = () => {
+      const id = Number(cb.dataset.id);
+      const item = currentCandidates.find(c => c.id === id);
+      item.included = cb.checked;
+      const hlCb = list.querySelector(`.candidate-highlight[data-id="${id}"]`);
+      hlCb.disabled = !cb.checked;
+      if (!cb.checked) { hlCb.checked = false; item.highlight = false; }
+      updateCandidateCount();
+    };
+  });
+  list.querySelectorAll(".candidate-highlight").forEach(cb => {
+    cb.onchange = () => {
+      const id = Number(cb.dataset.id);
+      const item = currentCandidates.find(c => c.id === id);
+      item.highlight = cb.checked;
+    };
+  });
+}
+
+// Lets the operator pull in an article the automatic weekly-window
+// suggestion missed (e.g. published slightly outside the period, or matched
+// under a different date field). Adding here only updates the in-memory
+// currentCandidates list — nothing is persisted until "Salvar seleção".
+function addArticleToCandidates(article) {
+  let item = currentCandidates.find(c => c.id === article.id);
+  if (item) {
+    item.included = true;
+  } else {
+    item = {
+      id: article.id, title: article.title, source: article.source, url: article.url,
+      published_at: article.published_at, scraped_at: article.scraped_at,
+      sentiment: article.sentiment ?? null, included: true, highlight: false,
+    };
+    currentCandidates.unshift(item);
+  }
+  renderBulletinCandidates();
+}
+
+async function searchBulletinCandidates() {
+  const query = document.getElementById("bulletin-candidate-search-input").value.trim();
+  const resultsEl = document.getElementById("bulletin-candidate-search-results");
+  if (!query) { resultsEl.innerHTML = ""; return; }
+  resultsEl.innerHTML = `<p class="article-sub">Buscando…</p>`;
+  try {
+    const { articles } = await api("search", { query, limit: 15 });
+    if (!articles.length) {
+      resultsEl.innerHTML = `<p class="article-sub">Nenhum artigo encontrado para "${escapeHtml(query)}".</p>`;
+      return;
+    }
+    resultsEl.innerHTML = articles.map(a => {
+      const existing = currentCandidates.find(c => c.id === a.id);
+      const alreadyIncluded = !!(existing && existing.included);
+      return `
+        <div class="candidate-row" data-search-id="${a.id}">
+          <div class="candidate-info">${bulletinArticleRow(a)}</div>
+          <button class="secondary candidate-add-btn" data-id="${a.id}" ${alreadyIncluded ? "disabled" : ""}>${alreadyIncluded ? "Já incluído" : "Adicionar"}</button>
+        </div>
+      `;
+    }).join("");
+    resultsEl.querySelectorAll(".candidate-add-btn").forEach(btn => {
+      btn.onclick = () => {
+        const id = Number(btn.dataset.id);
+        addArticleToCandidates(articles.find(a => a.id === id));
+        btn.disabled = true;
+        btn.textContent = "Já incluído";
+      };
+    });
+  } catch (e) {
+    resultsEl.innerHTML = `<p class="article-sub">Erro ao buscar: ${e.message}</p>`;
+  }
+}
+
+document.getElementById("bulletin-candidate-search-btn").onclick = () => searchBulletinCandidates();
+document.getElementById("bulletin-candidate-search-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); searchBulletinCandidates(); }
+});
+
+// "Semáforo" — same positivo/negativo/neutro badge row used on the overview
+// cards, but tallied across this week's articles instead of a timeframe.
+function renderBulletinSentiment(articles) {
+  const counts = { positivo: 0, negativo: 0, neutro: 0 };
+  articles.forEach(a => { if (a.sentiment && counts.hasOwnProperty(a.sentiment)) counts[a.sentiment]++; });
+  document.getElementById("bulletin-sentiment-row").innerHTML = sentimentRow(counts);
+}
+
+async function openBulletin(id) {
+  currentBulletinId = id;
+  const editor = document.getElementById("bulletin-editor");
+  editor.classList.remove("hidden");
+
+  const { bulletin, articles } = await api("bulletin", { id });
+
+  // The title input auto-suggests "Semana de DD/MM/YYYY a DD/MM/YYYY" when
+  // no custom title has been saved yet; the operator can freely overwrite it.
+  document.getElementById("bulletin-editor-title-input").value =
+    bulletin.title || `Semana de ${fmtDateShort(bulletin.week_start)} a ${fmtDateShort(bulletin.week_end)}`;
+
+  const badge = document.getElementById("bulletin-status-badge");
+  const isPublished = bulletin.status === "published";
+  badge.textContent = isPublished ? "publicado" : "rascunho";
+  badge.className = `badge ${isPublished ? "positivo" : "neutro"}`;
+
+  document.getElementById("bulletin-summary-input").innerHTML = htmlForEditor(bulletin.edited_summary ?? bulletin.generated_summary);
+  document.getElementById("bulletin-analysis-input").innerHTML = htmlForEditor(bulletin.edited_analysis ?? bulletin.generated_analysis);
+
+  const publishBtn = document.getElementById("bulletin-publish-btn");
+  publishBtn.disabled = isPublished;
+  publishBtn.textContent = isPublished ? "Já publicado" : "Publicar";
+
+  const portalLink = document.getElementById("bulletin-portal-link");
+  if (bulletin.publish_url) {
+    portalLink.href = bulletin.publish_url;
+    portalLink.classList.remove("hidden");
+  } else {
+    portalLink.classList.add("hidden");
+  }
+
+  renderBulletinSentiment(articles);
+  document.getElementById("bulletin-selection-status").textContent = "";
+  document.getElementById("bulletin-candidate-search-input").value = "";
+  document.getElementById("bulletin-candidate-search-results").innerHTML = "";
+  await loadBulletinCandidates(id);
+}
+
+document.getElementById("bulletin-save-btn").onclick = async () => {
+  if (!currentBulletinId) return;
+  const status = document.getElementById("bulletin-editor-status");
+  status.textContent = "Salvando…";
+  const titleValue = document.getElementById("bulletin-editor-title-input").value.trim();
+  await api("save_bulletin", {
+    id: currentBulletinId,
+    title: titleValue || null,
+    edited_summary: document.getElementById("bulletin-summary-input").innerHTML,
+    edited_analysis: document.getElementById("bulletin-analysis-input").innerHTML,
+  });
+  status.textContent = "Rascunho salvo (exemplo).";
+};
+
+document.getElementById("bulletin-selection-save-btn").onclick = async () => {
+  if (!currentBulletinId) return;
+  const status = document.getElementById("bulletin-selection-status");
+  const article_ids = currentCandidates.filter(c => c.included).map(c => c.id);
+  const highlight_article_ids = currentCandidates.filter(c => c.highlight).map(c => c.id);
+  status.textContent = "Salvando…";
+  await api("save_bulletin_selection", { id: currentBulletinId, article_ids, highlight_article_ids });
+  await openBulletin(currentBulletinId); // refresh sentiment bar + candidates from the saved state
+  document.getElementById("bulletin-selection-status").textContent = "Seleção salva (exemplo).";
+};
+
+document.getElementById("bulletin-publish-btn").onclick = async () => {
+  if (!currentBulletinId) return;
+  if (!confirm("Publicar este boletim? (prévia — nenhuma ação real é executada)")) return;
+  const status = document.getElementById("bulletin-editor-status");
+  status.textContent = "Publicando…";
+  await api("publish_bulletin", { id: currentBulletinId });
+  status.textContent = "Publicado (exemplo).";
+  await loadBulletins();
+};
+
+// ---------- Article detail modal ----------
+const backdrop = document.getElementById("modal-backdrop");
+document.getElementById("modal-close").onclick = () => backdrop.classList.add("hidden");
+backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.classList.add("hidden"); };
+
+async function openArticle(id) {
+  const { article, analysis } = await api("article", { id });
+  const body = document.getElementById("modal-content");
+
+  let analysisHtml;
+  if (analysis) {
+    analysisHtml = `
+      <p><strong>Sentimento:</strong> <span class="badge ${analysis.sentiment || "neutro"}">${analysis.sentiment || "—"}</span>
+         &nbsp; <strong>Resumo:</strong> ${escapeHtml(analysis.summary || "")}</p>
+      <div class="analysis-text">${escapeHtml(analysis.analysis_text || "")}</div>
+    `;
+  } else {
+    analysisHtml = `<p>Ainda não analisado. <button id="modal-analyze-btn">Analisar agora</button></p>`;
+  }
+
+  body.innerHTML = `
+    <h2>${escapeHtml(article.title)}</h2>
+    <p class="article-sub">${article.source} • ${fmtDateTime(article.published_at || article.scraped_at)}
+       ${article.category ? " • " + escapeHtml(article.category) : ""}
+       ${article.url ? ` • <a href="${article.url}" target="_blank" rel="noopener">link original</a>` : ""}</p>
+    ${article.matched_keywords && article.matched_keywords.length ? `<p class="article-sub">🏷️ Palavras-chave: ${article.matched_keywords.map(escapeHtml).join(", ")}</p>` : ""}
+    <div class="content-text">${escapeHtml(article.content || "")}</div>
+    <div style="margin-top:16px;">${analysisHtml}</div>
+  `;
+  backdrop.classList.remove("hidden");
+
+  const analyzeBtn = document.getElementById("modal-analyze-btn");
+  if (analyzeBtn) {
+    analyzeBtn.onclick = async () => {
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = "Analisando…";
+      await api("analyze_one", { article_id: id });
+      await openArticle(id);
+    };
+  }
+}
+
+// ---------- Boot straight into the app, no password gate in preview ----------
+(async function boot() {
+  const overview = await api("overview");
+  renderOverview(overview);
+  loadScheduler();
+  loadPending();
+  loadScopeEstimates();
+  populateSourceFilter();
+  populateManualSourceList();
+  loadKeywords();
+  loadArticles(true);
+  loadAnalyses(true);
+  loadSources();
+  loadBulletins();
+})();
+</script>
+</body>
+</html>
