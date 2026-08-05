@@ -593,6 +593,11 @@ const KEYWORD_CATEGORY_LABELS = {
   cultura: "Culturas", insumo: "Insumos", regional: "Regiões e estados",
   empresa: "Empresas", geral: "Geral"
 };
+// The DB's "regional" category (migrations 009/010/016) mixes the 5 macro-
+// regions with the 27 states/DF under one CHECK-constraint value. The
+// keywords index page splits them visually into two sections; this set is
+// just what distinguishes a macro-region term from a state term.
+const MACRO_REGIONS = new Set(["Cerrado", "Sul", "Sudeste", "Nordeste", "Norte"]);
 
 const WEEKDAY_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
 const FULL_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
@@ -767,12 +772,20 @@ function renderDetail(id) {
 // same way as the "keywords" table's category column. Each term links to
 // its own filtered view (renderKeywordDetail).
 function renderKeywordsIndex() {
-  const order = ["cultura", "insumo", "regional", "empresa", "geral"];
-  const sections = order.filter(cat => (MOCK_ALL_KEYWORDS[cat] || []).length).map(cat => `
+  const regional = MOCK_ALL_KEYWORDS.regional || [];
+  const sectionDefs = [
+    { label: KEYWORD_CATEGORY_LABELS.cultura, terms: MOCK_ALL_KEYWORDS.cultura },
+    { label: KEYWORD_CATEGORY_LABELS.insumo, terms: MOCK_ALL_KEYWORDS.insumo },
+    { label: "Regiões", terms: regional.filter(t => MACRO_REGIONS.has(t)) },
+    { label: "Estados", terms: regional.filter(t => !MACRO_REGIONS.has(t)) },
+    { label: KEYWORD_CATEGORY_LABELS.empresa, terms: MOCK_ALL_KEYWORDS.empresa },
+    { label: KEYWORD_CATEGORY_LABELS.geral, terms: MOCK_ALL_KEYWORDS.geral }
+  ];
+  const sections = sectionDefs.filter(s => (s.terms || []).length).map(s => `
     <div class="kwidx-section">
-      <h3>${escapeHtml(KEYWORD_CATEGORY_LABELS[cat] || cat)}</h3>
+      <h3>${escapeHtml(s.label)}</h3>
       <div class="kwidx-chips">
-        ${MOCK_ALL_KEYWORDS[cat].map(term => `<a class="kwidx-chip" href="${keywordHref(term)}">${escapeHtml(term)}</a>`).join("")}
+        ${s.terms.map(term => `<a class="kwidx-chip" href="${keywordHref(term)}">${escapeHtml(term)}</a>`).join("")}
       </div>
     </div>`).join("");
   document.getElementById("app").innerHTML = `
