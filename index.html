@@ -97,7 +97,8 @@
   .badge.insumo { background: #f5efe0; color: #92702c; }
   .badge.empresa { background: #f1eaf7; color: #6b3fa0; }
   .badge.regional { background: #eef2fb; color: #3a5a9b; }
-  .badge.geral { background: #eeeeee; color: var(--gray); }
+  .badge.instituicao { background: #fbeae7; color: #a1503a; }
+  .badge.clima { background: #e8f2fb; color: #2c6a96; }
   .badge.country { background: #eef6f6; color: #2f6f6f; }
   /* collector_type tag (migration 014) — RSS vs. plain HTML scraping, the
      only two scraper base classes in scraper/sources/*.py today. */
@@ -230,7 +231,7 @@
       <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
         <p class="status-msg">Não tem um link? Cadastre o artigo totalmente à mão, sem precisar de URL.</p>
         <div class="row">
-          <button class="secondary" id="manual-full-toggle-btn">+ Adicionar artigo totalmente manual</button>
+          <button class="secondary" id="manual-full-toggle-btn">+ Adicionar artigo sem link</button>
         </div>
         <div id="manual-full-form" class="hidden inline-form" style="margin-top:14px;">
           <label>Manchete</label>
@@ -281,8 +282,11 @@
 
     <section id="bulletin-section" class="group-boletim">
       <h2>Boletins</h2>
-      <p class="status-msg">Resumo semanal gerado por IA a partir das análises da semana. Um rascunho é criado automaticamente toda segunda-feira — edite o texto abaixo antes de publicar.</p>
+      <p class="status-msg">Resumo semanal gerado por IA a partir das análises da semana. Um rascunho é criado automaticamente toda segunda-feira — edite o texto abaixo antes de publicar. Precisa de uma edição extra fora do ciclo automático? Crie um rascunho manualmente.</p>
       <ul class="article-list" id="bulletin-week-list"></ul>
+      <div class="row" style="margin-top:14px;">
+        <button class="secondary" id="bulletin-create-btn">+ Novo boletim</button>
+      </div>
     </section>
 
     <section id="bulletin-editor" class="hidden group-boletim">
@@ -402,7 +406,8 @@
           <option value="insumo">Insumo</option>
           <option value="empresa">Empresa</option>
           <option value="regional">Regional</option>
-          <option value="geral">Geral</option>
+          <option value="instituicao">Instituição</option>
+          <option value="clima">Clima</option>
         </select>
         <div class="row" style="margin-top:10px;">
           <button id="keyword-save-btn">Adicionar</button>
@@ -465,21 +470,140 @@ const MOCK_TITLES = [
   ["Ruveon inicia operações comerciais nos EUA", "ruveon", "agroquímicos", "neutro"],
 ];
 
-let MOCK_KEYWORD_ID = 20;
+let MOCK_KEYWORD_ID = 217;
+// Mirrors the production `keywords` table (migrations 009/010/015-021) —
+// keep this in sync whenever a new keyword migration runs.
 const MOCK_KEYWORDS = [
+  // Migração 009: seed inicial (culturas, insumos base, macro-regiões, clima)
   { id: 1, term: "soja", category: "cultura" },
   { id: 2, term: "milho", category: "cultura" },
   { id: 3, term: "algodão", category: "cultura" },
-  { id: 4, term: "clima", category: "geral" },
-  { id: 5, term: "herbicida", category: "insumo" },
-  { id: 6, term: "fungicida", category: "insumo" },
-  { id: 7, term: "fertilizante", category: "insumo" },
-  { id: 8, term: "Cerrado", category: "regional" },
-  { id: 9, term: "Sul", category: "regional" },
-  { id: 10, term: "Nordeste", category: "regional" },
-  { id: 11, term: "Bayer", category: "empresa" },
-  { id: 12, term: "BASF", category: "empresa" },
-  { id: 13, term: "Syngenta", category: "empresa" },
+  { id: 4, term: "herbicidas", category: "insumo" },
+  { id: 5, term: "fungicidas", category: "insumo" },
+  { id: 6, term: "inseticidas", category: "insumo" },
+  { id: 7, term: "nematicidas", category: "insumo" },
+  { id: 8, term: "fertilizantes", category: "insumo" },
+  { id: 9, term: "Cerrado", category: "regional" },
+  { id: 10, term: "Sul", category: "regional" },
+  { id: 11, term: "Sudeste", category: "regional" },
+  { id: 12, term: "Nordeste", category: "regional" },
+  { id: 13, term: "Norte", category: "regional" },
+  { id: 14, term: "clima", category: "clima" },
+  // Migração 010: primeiras empresas (categoria "empresa" criada)
+  { id: 15, term: "Bayer", category: "empresa" },
+  { id: 16, term: "BASF", category: "empresa" },
+  { id: 17, term: "Syngenta", category: "empresa" },
+  { id: 18, term: "Corteva", category: "empresa" },
+  { id: 19, term: "FMC", category: "empresa" },
+  { id: 20, term: "Ruveon", category: "empresa" },
+  // Migração 015: biológicos/sementes, mais culturas e mais empresas
+  { id: 21, term: "biofertilizantes", category: "insumo" },
+  { id: 22, term: "biodefensivos", category: "insumo" },
+  { id: 23, term: "bioinsumos", category: "insumo" },
+  { id: 24, term: "sementes", category: "insumo" },
+  { id: 25, term: "café", category: "cultura" },
+  { id: 26, term: "cana-de-açúcar", category: "cultura" },
+  { id: 27, term: "trigo", category: "cultura" },
+  { id: 28, term: "arroz", category: "cultura" },
+  { id: 29, term: "feijão", category: "cultura" },
+  { id: 30, term: "Yara", category: "empresa" },
+  { id: 31, term: "Mosaic", category: "empresa" },
+  { id: 32, term: "ICL", category: "empresa" },
+  { id: 33, term: "Heringer", category: "empresa" },
+  { id: 34, term: "UPL", category: "empresa" },
+  { id: 35, term: "Nufarm", category: "empresa" },
+  { id: 36, term: "Adama", category: "empresa" },
+  { id: 37, term: "Ihara", category: "empresa" },
+  { id: 38, term: "TMG", category: "empresa" },
+  { id: 39, term: "Cargill", category: "empresa" },
+  { id: 40, term: "Bunge", category: "empresa" },
+  { id: 41, term: "ADM", category: "empresa" },
+  { id: 42, term: "Louis Dreyfus", category: "empresa" },
+  { id: 43, term: "Amaggi", category: "empresa" },
+  { id: 44, term: "COFCO", category: "empresa" },
+  { id: 45, term: "JBS", category: "empresa" },
+  { id: 46, term: "Marfrig", category: "empresa" },
+  { id: 47, term: "BRF", category: "empresa" },
+  { id: 48, term: "Minerva", category: "empresa" },
+  { id: 49, term: "John Deere", category: "empresa" },
+  { id: 50, term: "Case IH", category: "empresa" },
+  { id: 51, term: "New Holland", category: "empresa" },
+  { id: 52, term: "AGCO", category: "empresa" },
+  { id: 53, term: "Jacto", category: "empresa" },
+  { id: 54, term: "Stara", category: "empresa" },
+  { id: 55, term: "Raízen", category: "empresa" },
+  { id: 56, term: "Cosan", category: "empresa" },
+  // Migração 016: os 26 estados + Distrito Federal (categoria "regional")
+  { id: 57, term: "Acre", category: "regional" },
+  { id: 58, term: "Alagoas", category: "regional" },
+  { id: 59, term: "Amapá", category: "regional" },
+  { id: 60, term: "Amazonas", category: "regional" },
+  { id: 61, term: "Bahia", category: "regional" },
+  { id: 62, term: "Ceará", category: "regional" },
+  { id: 63, term: "Distrito Federal", category: "regional" },
+  { id: 64, term: "Espírito Santo", category: "regional" },
+  { id: 65, term: "Goiás", category: "regional" },
+  { id: 66, term: "Maranhão", category: "regional" },
+  { id: 67, term: "Mato Grosso", category: "regional" },
+  { id: 68, term: "Mato Grosso do Sul", category: "regional" },
+  { id: 69, term: "Minas Gerais", category: "regional" },
+  { id: 70, term: "Pará", category: "regional" },
+  { id: 71, term: "Paraíba", category: "regional" },
+  { id: 72, term: "Paraná", category: "regional" },
+  { id: 73, term: "Pernambuco", category: "regional" },
+  { id: 74, term: "Piauí", category: "regional" },
+  { id: 75, term: "Rio de Janeiro", category: "regional" },
+  { id: 76, term: "Rio Grande do Norte", category: "regional" },
+  { id: 77, term: "Rio Grande do Sul", category: "regional" },
+  { id: 78, term: "Rondônia", category: "regional" },
+  { id: 79, term: "Roraima", category: "regional" },
+  { id: 80, term: "Santa Catarina", category: "regional" },
+  { id: 81, term: "São Paulo", category: "regional" },
+  { id: 82, term: "Sergipe", category: "regional" },
+  { id: 83, term: "Tocantins", category: "regional" },
+  // Migração 017: mais culturas brasileiras (categoria "cultura")
+  { id: 84, term: "sorgo", category: "cultura" },
+  { id: 85, term: "girassol", category: "cultura" },
+  { id: 86, term: "amendoim", category: "cultura" },
+  { id: 87, term: "cevada", category: "cultura" },
+  { id: 88, term: "aveia", category: "cultura" },
+  { id: 89, term: "gergelim", category: "cultura" },
+  { id: 90, term: "mamona", category: "cultura" },
+  { id: 91, term: "mandioca", category: "cultura" },
+  { id: 92, term: "batata", category: "cultura" },
+  { id: 93, term: "cacau", category: "cultura" },
+  { id: 94, term: "uva", category: "cultura" },
+  { id: 95, term: "citros", category: "cultura" },
+  { id: 96, term: "maçã", category: "cultura" },
+  { id: 97, term: "tomate", category: "cultura" },
+  { id: 98, term: "fumo", category: "cultura" },
+  // Migração 018: instituições de pesquisa e extensão (categoria nova
+  // "instituicao" — "Embrapa" existia desde antes como fonte, mas não como
+  // palavra-chave; passa a ser rastreada aqui também)
+  { id: 99, term: "Embrapa", category: "instituicao" },
+  { id: 100, term: "Esalq", category: "instituicao" },
+  { id: 101, term: "Cepea", category: "instituicao" },
+  { id: 102, term: "Conab", category: "instituicao" },
+  { id: 103, term: "Mapa", category: "instituicao" },
+  { id: 104, term: "IAC", category: "instituicao" },
+  { id: 105, term: "Iapar", category: "instituicao" },
+  { id: 106, term: "Epagri", category: "instituicao" },
+  { id: 107, term: "Emater", category: "instituicao" },
+  { id: 108, term: "Incaper", category: "instituicao" },
+  // Migração 019: fenômenos climáticos específicos (categoria "geral" na
+  // época — renomeada para "clima" na migração 020, já refletido abaixo)
+  { id: 109, term: "geada", category: "clima" },
+  { id: 110, term: "seca", category: "clima" },
+  { id: 111, term: "estiagem", category: "clima" },
+  { id: 112, term: "veranico", category: "clima" },
+  { id: 113, term: "granizo", category: "clima" },
+  { id: 114, term: "enchente", category: "clima" },
+  { id: 115, term: "El Niño", category: "clima" },
+  { id: 116, term: "La Niña", category: "clima" },
+  // Migração 021: adiciona a região Centro-Oeste — faltava entre as 5
+  // macro-regiões (Norte/Nordeste/Centro-Oeste/Sudeste/Sul), junto do
+  // bioma Cerrado que já era rastreado desde a 009.
+  { id: 117, term: "Centro-Oeste", category: "regional" },
 ];
 
 // PREVIEW: same word-boundary substring matching scraper/runner.py does for
@@ -524,6 +648,15 @@ function addDaysIso(iso, days) {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+function isoWeekStartCurrent() {
+  // Monday of the current (in-progress) week — used when the operator
+  // creates a bulletin manually, outside the automatic Monday cycle.
+  const now = new Date();
+  const dayOfWeek = (now.getUTCDay() + 6) % 7; // 0=Monday .. 6=Sunday
+  const monday = new Date(now);
+  monday.setUTCDate(now.getUTCDate() - dayOfWeek);
+  return monday.toISOString().slice(0, 10);
+}
 
 const MOCK_BULLETINS = [
   {
@@ -558,6 +691,7 @@ const MOCK_BULLETINS = [
   },
 ];
 
+let MOCK_BULLETIN_ID = 4; // next id after the seeded bulletins (3, 2) above
 let MOCK_SOURCE_ID = 100;
 const MOCK_SOURCES = [
   { id: 1, key: "embrapa", name: "Embrapa", url: "https://www.embrapa.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil", collector_type: "rss" },
@@ -657,6 +791,30 @@ async function api(action, params = {}) {
           return { id: a.id, title: a.title, source: a.source, url: a.url, published_at: a.published_at, scraped_at: a.scraped_at, summary: MOCK_SUMMARIES[a._sentiment], sentiment: a._sentiment };
         }),
       };
+    }
+
+    case "create_bulletin": {
+      // Manual creation, for an extra edition outside the automatic
+      // Monday cycle. Starts as an empty draft anchored to the current
+      // week — the operator fills in the summary/analysis and picks
+      // articles via "Buscar artigo", same as any other draft.
+      const week_start = isoWeekStartCurrent();
+      const week_end = addDaysIso(week_start, 6);
+      const b = {
+        id: MOCK_BULLETIN_ID++,
+        week_start, week_end,
+        title: null,
+        archived: false,
+        status: "draft", published_at: null, created_at: new Date().toISOString(),
+        generated_summary: "", generated_analysis: "",
+        edited_summary: null, edited_analysis: null,
+        _articleIds: [],
+        _extraCandidateIds: [],
+        highlight_article_ids: [],
+        publish_url: null,
+      };
+      MOCK_BULLETINS.unshift(b);
+      return { bulletin: b };
     }
 
     case "save_bulletin": {
@@ -793,7 +951,7 @@ async function api(action, params = {}) {
       return { keywords: MOCK_KEYWORDS.slice().sort((a, b) => a.category.localeCompare(b.category) || a.term.localeCompare(b.term)) };
 
     case "add_keyword": {
-      const keyword = { id: ++MOCK_KEYWORD_ID, term: params.term, category: params.category || "geral" };
+      const keyword = { id: ++MOCK_KEYWORD_ID, term: params.term, category: params.category || "cultura" };
       MOCK_KEYWORDS.push(keyword);
       return { keyword };
     }
@@ -1413,7 +1571,7 @@ document.getElementById("source-save-btn").onclick = async () => {
 };
 
 // ---------- Keywords (Palavras-chave) ----------
-const KEYWORD_CATEGORY_LABELS = { cultura: "Cultura", insumo: "Insumo", empresa: "Empresa", regional: "Regional", geral: "Geral" };
+const KEYWORD_CATEGORY_LABELS = { cultura: "Cultura", insumo: "Insumo", empresa: "Empresa", regional: "Regional", instituicao: "Instituição", clima: "Clima" };
 let allKeywords = [];
 
 function populateKeywordFilter() {
@@ -1588,6 +1746,17 @@ async function loadBulletins() {
   });
   openBulletin(bulletins[0].id);
 }
+
+document.getElementById("bulletin-create-btn").onclick = async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    await api("create_bulletin");
+    await loadBulletins(); // newest bulletin is unshifted to the front, so this also opens it
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 function bulletinArticleRow(a) {
   return `
