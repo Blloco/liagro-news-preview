@@ -178,6 +178,54 @@
   .filter-btn:hover { border-color: var(--accent); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+  .date-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .date-filter-row .filter-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin-right: 2px;
+  }
+  .date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 4px;
+    padding-left: 10px;
+    border-left: 1px solid var(--line);
+  }
+  .date-range-inputs span { font-size: 13px; color: var(--muted); }
+  .date-range-inputs input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: #fff;
+    color-scheme: light;
+  }
+  .date-range-inputs input[type="date"]:focus { outline: none; border-color: var(--accent); }
+  .date-filter-clear {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    padding: 4px 2px;
+    text-decoration: underline;
+  }
+  .results-count { font-size: 13.5px; color: var(--muted); margin-top: 10px; }
+
   .trending-card {
     background: var(--trend-bg);
     border: 1px solid var(--trend-border);
@@ -968,10 +1016,32 @@ function allArticlesFlat() {
   return out;
 }
 
-function renderArticlesIndex(filter) {
-  filter = filter || "all";
+// In-memory filter state for the Artigos page — reset whenever the page
+// is left (see route()), so re-entering always starts from "todos os
+// artigos" rather than remembering a stale filter from a prior visit.
+let articlesFilterState = { sentiment: "all", datePreset: "all", dateFrom: null, dateTo: null };
+
+function articleDateMatches(item) {
+  const { datePreset, dateFrom, dateTo } = articlesFilterState;
+  if (datePreset === "all") return true;
+  const d = parseLocalDate(item.published_at);
+  if (datePreset === "7d" || datePreset === "30d") {
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (datePreset === "7d" ? 7 : 30));
+    return d >= cutoff;
+  }
+  // "custom" — either bound can be open-ended.
+  if (dateFrom && d < parseLocalDate(dateFrom)) return false;
+  if (dateTo && d > parseLocalDate(dateTo)) return false;
+  return true;
+}
+
+function renderArticlesIndex() {
   const all = allArticlesFlat();
-  const filtered = filter === "all" ? all : all.filter(({ item }) => item.sentiment === filter);
+  const filtered = all.filter(({ item }) =>
+    (articlesFilterState.sentiment === "all" || item.sentiment === articlesFilterState.sentiment) &&
+    articleDateMatches(item));
 
   const filterDefs = [
     { key: "all", label: "Todas" },
@@ -980,7 +1050,16 @@ function renderArticlesIndex(filter) {
     { key: "neu", label: "Neutras" }
   ];
   const filterBtns = filterDefs.map(f =>
-    `<button class="filter-btn${filter === f.key ? " active" : ""}" data-filter="${f.key}">${f.label}</button>`).join("");
+    `<button class="filter-btn${articlesFilterState.sentiment === f.key ? " active" : ""}" data-filter="${f.key}">${f.label}</button>`).join("");
+
+  const datePresetDefs = [
+    { key: "all", label: "Todo o período" },
+    { key: "7d", label: "Últimos 7 dias" },
+    { key: "30d", label: "Últimos 30 dias" }
+  ];
+  const datePresetBtns = datePresetDefs.map(d =>
+    `<button class="filter-btn${articlesFilterState.datePreset === d.key ? " active" : ""}" data-date-preset="${d.key}">${d.label}</button>`).join("");
+  const hasCustomDates = !!(articlesFilterState.dateFrom || articlesFilterState.dateTo);
 
   const itemsHtml = filtered.length ? `
     <ul class="article-list">
@@ -996,20 +1075,58 @@ function renderArticlesIndex(filter) {
             ${kwRow(item.keywords)}
           </div>
         </li>`).join("")}
-    </ul>` : `<p class="empty-state">Nenhum artigo encontrado para este filtro.</p>`;
+    </ul>` : `<p class="empty-state">Nenhum artigo encontrado para os filtros selecionados.</p>`;
+
+  const countLabel = filtered.length === all.length
+    ? `${all.length} artigo${all.length === 1 ? "" : "s"} no total.`
+    : `${filtered.length} de ${all.length} artigos correspondem aos filtros selecionados.`;
 
   document.getElementById("app").innerHTML = `
     <button class="back-link" id="back-btn">← Todos os boletins</button>
     <div class="list-head">
       <h1>Todos os artigos</h1>
-      <p>Todas as notícias já publicadas nos boletins semanais, da mais recente à mais antiga (${all.length} no total).</p>
+      <p>Todas as notícias já publicadas nos boletins semanais, da mais recente à mais antiga.</p>
       <div class="filter-row">${filterBtns}</div>
+      <div class="date-filter-row">
+        <span class="filter-label">Período</span>
+        ${datePresetBtns}
+        <div class="date-range-inputs">
+          <input type="date" id="date-from-input" value="${articlesFilterState.dateFrom || ""}" aria-label="Data inicial">
+          <span>até</span>
+          <input type="date" id="date-to-input" value="${articlesFilterState.dateTo || ""}" aria-label="Data final">
+        </div>
+        ${hasCustomDates ? `<button class="date-filter-clear" id="date-filter-clear-btn">Limpar datas</button>` : ""}
+      </div>
+      <p class="results-count">${countLabel}</p>
     </div>
     ${itemsHtml}`;
   document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.onclick = () => renderArticlesIndex(btn.dataset.filter);
+  document.querySelectorAll(".filter-btn[data-filter]").forEach(btn => {
+    btn.onclick = () => { articlesFilterState.sentiment = btn.dataset.filter; renderArticlesIndex(); };
   });
+  document.querySelectorAll(".filter-btn[data-date-preset]").forEach(btn => {
+    btn.onclick = () => {
+      articlesFilterState.datePreset = btn.dataset.datePreset;
+      articlesFilterState.dateFrom = null;
+      articlesFilterState.dateTo = null;
+      renderArticlesIndex();
+    };
+  });
+  document.getElementById("date-from-input").onchange = (e) => {
+    articlesFilterState.dateFrom = e.target.value || null;
+    articlesFilterState.datePreset = "custom";
+    renderArticlesIndex();
+  };
+  document.getElementById("date-to-input").onchange = (e) => {
+    articlesFilterState.dateTo = e.target.value || null;
+    articlesFilterState.datePreset = "custom";
+    renderArticlesIndex();
+  };
+  const clearBtn = document.getElementById("date-filter-clear-btn");
+  if (clearBtn) clearBtn.onclick = () => {
+    articlesFilterState = { sentiment: articlesFilterState.sentiment, datePreset: "all", dateFrom: null, dateTo: null };
+    renderArticlesIndex();
+  };
   window.scrollTo(0, 0);
 }
 
@@ -1180,7 +1297,11 @@ function route() {
   m = hash.match(/^#\/palavra-chave\/([^/]+)/);
   if (m) { renderKeywordDetail(decodeURIComponent(m[1])); return; }
   if (/^#\/palavras-chave/.test(hash)) { renderKeywordsIndex(); return; }
-  if (/^#\/artigos/.test(hash)) { renderArticlesIndex(); return; }
+  if (/^#\/artigos/.test(hash)) {
+    articlesFilterState = { sentiment: "all", datePreset: "all", dateFrom: null, dateTo: null };
+    renderArticlesIndex();
+    return;
+  }
   m = hash.match(/^#\/busca\/([^/]+)/);
   if (m) { renderSearch(decodeURIComponent(m[1])); return; }
   renderList();
