@@ -26,6 +26,8 @@
     --neu-bg: #efeadf;
     --bulletin-bg: #eef3ec;
     --bulletin-bg-faded: #f6f8f5;
+    --trend-bg: #faf1de;
+    --trend-border: #e9d7ae;
     --radius: 10px;
   }
   * { box-sizing: border-box; }
@@ -178,20 +180,21 @@
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .trending-card {
-    background: var(--accent-2);
+    background: var(--trend-bg);
+    border: 1px solid var(--trend-border);
     border-radius: var(--radius);
     padding: 22px 26px 24px;
     margin-bottom: 26px;
   }
-  .trending-card .eyebrow { color: #cfe0d1; margin-bottom: 12px; }
+  .trending-card .eyebrow { color: var(--gold); margin-bottom: 12px; }
   .trend-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .trend-chip {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.22);
-    color: #fff;
+    background: #fff;
+    border: 1px solid var(--trend-border);
+    color: var(--ink);
     font-family: 'Lora', serif;
     font-weight: 600;
     font-size: 14.5px;
@@ -200,7 +203,7 @@
     text-decoration: none;
     transition: border-color .15s ease, background .15s ease;
   }
-  .trend-chip:hover { border-color: var(--gold); background: rgba(255,255,255,.14); }
+  .trend-chip:hover { border-color: var(--gold); background: #fffaf0; }
   .trend-chip .trend-count {
     background: var(--gold);
     color: #fff;
@@ -289,37 +292,43 @@
 
   /* The bulletin itself is a colored "macrocard" — a visual container so
      it's clear every white article/highlight card inside belongs to that
-     one weekly edition, distinct from the cream page background. */
+     one weekly edition, distinct from the cream page background. Its
+     header band (eyebrow/título/meta) uses the strong dark green that
+     used to live on the trending card, so the edition's identity reads
+     clearly before the lighter body below it. */
   article.bulletin {
     background: var(--bulletin-bg);
     border: 1px solid var(--line);
     border-left: 4px solid var(--accent);
     border-radius: var(--radius);
-    padding: 30px 32px 34px;
     margin-bottom: 40px;
+    overflow: hidden;
   }
-  article.bulletin .eyebrow { margin-bottom: 12px; }
-  article.bulletin h1 {
+  .bulletin-header {
+    background: var(--accent-2);
+    padding: 28px 32px 24px;
+    margin-bottom: 28px;
+  }
+  .bulletin-header .eyebrow { color: #cfe0d1; margin-bottom: 12px; }
+  .bulletin-header h1 {
     font-family: 'Lora', serif;
     font-size: 38px;
     line-height: 1.18;
     font-weight: 700;
-    color: var(--accent-2);
+    color: #fff;
     margin: 0 0 16px;
     letter-spacing: -.015em;
   }
-  .meta-row {
+  .bulletin-header .meta-row {
     display: flex;
     align-items: center;
     gap: 14px;
-    color: var(--muted);
+    color: rgba(255,255,255,.78);
     font-size: 13.5px;
-    margin-bottom: 30px;
-    padding-bottom: 26px;
-    border-bottom: 1px solid var(--line);
     flex-wrap: wrap;
   }
-  .meta-row .sentiment-row { margin-left: auto; }
+  .bulletin-header .meta-row .sentiment-row { margin-left: auto; }
+  .bulletin-body { padding: 0 32px 34px; }
 
   .lead {
     font-family: 'Lora', serif;
@@ -492,9 +501,9 @@
   footer.site strong { color: var(--ink-soft); }
 
   @media (max-width: 560px) {
-    article.bulletin h1 { font-size: 29px; }
+    .bulletin-header h1 { font-size: 29px; }
     .list-head h1 { font-size: 26px; }
-    .meta-row .sentiment-row { margin-left: 0; width: 100%; }
+    .bulletin-header .meta-row .sentiment-row { margin-left: 0; width: 100%; }
     .card-foot { flex-direction: column; align-items: flex-start; gap: 10px; }
   }
 </style>
@@ -749,30 +758,34 @@ function bulletinArticleHtml(b, opts) {
 
   return `
     <article class="bulletin" id="bulletin-${b.id}">
-      <div class="eyebrow">${opts.eyebrow || "Boletim semanal"}</div>
-      <h1>${escapeHtml(b.title)}</h1>
-      <div class="meta-row">
-        <span>Semana de ${weekRangeLabel(b)}</span>
-        <span>·</span>
-        <span>Publicado em ${publishedLabel(b.published_at)}</span>
-        <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
+      <div class="bulletin-header">
+        <div class="eyebrow">${opts.eyebrow || "Boletim semanal"}</div>
+        <h1>${escapeHtml(b.title)}</h1>
+        <div class="meta-row">
+          <span>Semana de ${weekRangeLabel(b)}</span>
+          <span>·</span>
+          <span>Publicado em ${publishedLabel(b.published_at)}</span>
+          <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
+        </div>
       </div>
-      <p class="lead">${escapeHtml(b.summary)}</p>
+      <div class="bulletin-body">
+        <p class="lead">${escapeHtml(b.summary)}</p>
 
-      <section class="block">
-        <h3>Destaques da semana</h3>
-        <div class="highlight-grid">${highlights}</div>
-      </section>
+        <section class="block">
+          <h3>Destaques da semana</h3>
+          <div class="highlight-grid">${highlights}</div>
+        </section>
 
-      <section class="block">
-        <h3>Análise e conclusão</h3>
-        <div class="analysis-body">${analysisHtml}</div>
-      </section>
+        <section class="block">
+          <h3>Análise e conclusão</h3>
+          <div class="analysis-body">${analysisHtml}</div>
+        </section>
 
-      <section class="block">
-        <h3>Todos os artigos desta semana (${b.articles.length + b.highlights.length})</h3>
-        <div class="highlight-grid">${articleItems}</div>
-      </section>
+        <section class="block">
+          <h3>Todos os artigos desta semana (${b.articles.length + b.highlights.length})</h3>
+          <div class="highlight-grid">${articleItems}</div>
+        </section>
+      </div>
     </article>`;
 }
 
