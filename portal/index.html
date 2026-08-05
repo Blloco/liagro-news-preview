@@ -343,6 +343,44 @@
     font-weight: 500;
   }
 
+  /* Sponsored-banner placeholder. Sits at the first natural reading pause
+     (after the lead, before the reader moves into "Destaques da semana")
+     — a standard in-article ad position with high viewability that stays
+     well clear of any nav/link-heavy area, consistent with AdSense's
+     rules on ad/content separation and against placement that invites
+     accidental clicks. Deliberately just one slot per bulletin — AdSense
+     also penalizes excessive ad density, so this preview shows only the
+     single best-placed unit rather than one at every section boundary. */
+  .ad-slot {
+    background: var(--paper-2);
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 0 0 36px;
+    padding: 20px;
+    text-align: center;
+  }
+  .ad-slot .ad-slot-label {
+    text-transform: uppercase;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    color: var(--muted);
+  }
+  .ad-slot .ad-slot-note {
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 340px;
+    line-height: 1.5;
+  }
+  .ad-slot .ad-slot-dim { font-size: 12px; color: var(--muted); opacity: .75; }
+
   section.block { margin-bottom: 40px; }
   section.block > h3 {
     font-family: 'Lora', serif;
@@ -774,6 +812,12 @@ function bulletinArticleHtml(b, opts) {
       <div class="bulletin-body">
         <p class="lead">${escapeHtml(b.summary)}</p>
 
+        <div class="ad-slot" role="complementary" aria-label="Espaço publicitário">
+          <span class="ad-slot-label">Publicidade</span>
+          <span class="ad-slot-note">Espaço reservado para banner patrocinado (Google AdSense)</span>
+          <span class="ad-slot-dim">Formato responsivo · ~728×90 / 300×250</span>
+        </div>
+
         <section class="block">
           <h3>Destaques da semana</h3>
           <div class="highlight-grid">${highlights}</div>
@@ -796,7 +840,7 @@ function renderList() {
   const [latest, ...older] = MOCK_BULLETINS;
   const head = `
     <div class="list-head">
-      <h1>Boletins semanais</h1>
+      <h1>Portal Liagro News</h1>
       <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
       <form id="search-form" class="search-form">
         <input type="search" id="search-input" class="search-input" placeholder="Buscar boletins, notícias ou palavras-chave…">
