@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liagro News — Boletins (PRÉVIA)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c2620;
+    --ink-soft: #4b564e;
+    --muted: #7c8a7f;
+    --paper: #faf8f3;
+    --paper-2: #f2efe6;
+    --line: #e4ddcd;
+    --accent: #2f5233;
+    --accent-2: #1f3d2b;
+    --gold: #b8863b;
+    --pos: #2f6b3f;
+    --pos-bg: #e7f1e6;
+    --neg: #a13d34;
+    --neg-bg: #f7e7e4;
+    --neu: #6b6456;
+    --neu-bg: #efeadf;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ---------- preview banner ---------- */
+  .preview-banner {
+    background: var(--accent-2);
+    color: #fff;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: 7px 12px;
+  }
+  .preview-banner span { opacity: .75; font-weight: 500; margin-left: 6px; }
+
+  /* ---------- header ---------- */
+  header.site {
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .site-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: 'Lora', serif;
+    font-weight: 700;
+    font-size: 21px;
+    color: var(--accent-2);
+    text-decoration: none;
+    letter-spacing: -.01em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .wordmark .leaf {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px;
+    flex-shrink: 0;
+  }
+  nav.site-nav { display: flex; gap: 22px; font-size: 14px; font-weight: 500; color: var(--ink-soft); }
+  nav.site-nav a { text-decoration: none; }
+  nav.site-nav a:hover { color: var(--accent-2); }
+
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---------- list view ---------- */
+  .list-head { margin-bottom: 30px; }
+  .list-head h1 {
+    font-family: 'Lora', serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--accent-2);
+    letter-spacing: -.01em;
+  }
+  .list-head p { color: var(--ink-soft); font-size: 15.5px; margin: 0; max-width: 560px; }
+
+  .bulletin-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px 28px;
+    margin-bottom: 18px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .bulletin-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 3px 14px rgba(31,61,43,.08);
+    transform: translateY(-1px);
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    color: var(--gold);
+    margin-bottom: 9px;
+  }
+  .bulletin-card h2 {
+    font-family: 'Lora', serif;
+    font-size: 23px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .bulletin-card .excerpt {
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 16px;
+  }
+  .card-foot { display: flex; align-items: center; justify-content: space-between; }
+  .sentiment-row { display: flex; gap: 8px; }
+  .sent-chip {
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .sent-chip.pos { background: var(--pos-bg); color: var(--pos); }
+  .sent-chip.neg { background: var(--neg-bg); color: var(--neg); }
+  .sent-chip.neu { background: var(--neu-bg); color: var(--neu); }
+  .read-link { font-size: 14px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+
+  /* ---------- detail view ---------- */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    margin-bottom: 28px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+  }
+  .back-link:hover { color: var(--accent-2); }
+
+  article.bulletin { }
+  article.bulletin .eyebrow { margin-bottom: 12px; }
+  article.bulletin h1 {
+    font-family: 'Lora', serif;
+    font-size: 38px;
+    line-height: 1.18;
+    font-weight: 700;
+    color: var(--accent-2);
+    margin: 0 0 16px;
+    letter-spacing: -.015em;
+  }
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--muted);
+    font-size: 13.5px;
+    margin-bottom: 30px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .meta-row .sentiment-row { margin-left: auto; }
+
+  .lead {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 36px;
+    font-weight: 500;
+  }
+
+  section.block { margin-bottom: 40px; }
+  section.block > h3 {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 18px;
+  }
+
+  .highlight-grid { display: grid; gap: 14px; }
+  .highlight-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .highlight-card:hover { border-left-color: var(--gold); }
+  .highlight-card .h-title {
+    font-family: 'Lora', serif;
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 7px;
+    line-height: 1.4;
+  }
+  .highlight-card .h-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .highlight-card .h-meta .dot { opacity: .5; }
+
+  .analysis-body { font-size: 16px; line-height: 1.75; color: var(--ink); }
+  .analysis-body h4 {
+    font-family: 'Lora', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent-2);
+    margin: 22px 0 8px;
+  }
+  .analysis-body h4:first-child { margin-top: 0; }
+  .analysis-body p { margin: 0 0 14px; }
+
+  .article-list { list-style: none; margin: 0; padding: 0; }
+  .article-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+  }
+  .article-list li:last-child { border-bottom: none; }
+  .article-list a.al-title { font-weight: 600; color: var(--ink); text-decoration: none; }
+  .article-list a.al-title:hover { color: var(--accent-2); text-decoration: underline; }
+  .article-list .al-meta { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+  footer.site {
+    border-top: 1px solid var(--line);
+    margin-top: 60px;
+    padding: 28px 24px 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer.site strong { color: var(--ink-soft); }
+
+  @media (max-width: 560px) {
+    article.bulletin h1 { font-size: 29px; }
+    .list-head h1 { font-size: 26px; }
+    .meta-row .sentiment-row { margin-left: 0; width: 100%; }
+    .card-foot { flex-direction: column; align-items: flex-start; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-banner">PRÉVIA — dados fictícios, layout em revisão<span>não é a versão publicada</span></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button class="wordmark" id="logo-btn"><span class="leaf">🌱</span> Liagro News</button>
+    <nav class="site-nav">
+      <a href="#" id="nav-boletins">Boletins</a>
+      <a href="#" id="nav-sobre">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="site">
+  <strong>Liagro News</strong> — inteligência para o agronegócio brasileiro.<br>
+  Análises geradas a partir de fontes públicas, com curadoria e revisão editorial.
+</footer>
+
+<script>
+// ---------------------------------------------------------------------
+// MOCK DATA — préviа apenas. No lançamento real, isso vem de um endpoint
+// público (sem senha) que expõe só weekly_bulletins com status=published
+// e archived=false, além dos articles/analysis vinculados a cada um.
+// ---------------------------------------------------------------------
+const MOCK_BULLETINS = [
+  {
+    id: 3,
+    week_start: "2026-07-27",
+    week_end: "2026-08-02",
+    title: "Safra de soja em alta, milho sob pressão externa",
+    published_at: "2026-08-03T13:10:00Z",
+    summary: "A semana foi marcada por revisões nas projeções de safra de soja, oscilação nos preços do milho por pressão externa e avanços em novos defensivos agrícolas. O clima seguiu como ponto de atenção em algumas regiões produtoras.",
+    analysis: [
+      { h: "Tendência", p: "O mercado de grãos segue sensível a fatores externos, especialmente exportações americanas, o que manteve os preços do milho em queda ao longo da semana." },
+      { h: "Riscos", p: "A irregularidade das chuvas no Centro-Oeste é o principal ponto de atenção — produtores devem monitorar de perto o desenvolvimento das lavouras." },
+      { h: "Oportunidades", p: "O lançamento de novos produtos por Syngenta, Corteva e Embrapa reforça o ritmo de inovação tecnológica no setor, com potencial de ganhos de produtividade nas próximas safras." },
+      { h: "Conclusão", p: "Semana de sinais mistos — otimismo na frente tecnológica, cautela na frente climática e de mercado." }
+    ],
+    sentiments: { pos: 3, neg: 2, neu: 1 },
+    highlights: [
+      { title: "Safra de soja 2026/27 deve crescer 4% aponta Conab", source: "Agrolink", published_at: "2026-08-01", sentiment: "pos", url: "#" },
+      { title: "Syngenta anuncia novo fungicida para ferrugem asiática", source: "Syngenta", published_at: "2026-08-01", sentiment: "neu", url: "#" },
+      { title: "Embrapa lança cultivar de algodão resistente à seca", source: "Embrapa", published_at: "2026-07-27", sentiment: "pos", url: "#" }
+    ],
+    articles: [
+      { title: "Preço do milho recua com pressão de exportações americanas", source: "Reuters", published_at: "2026-08-03", sentiment: "neg", url: "#" },
+      { title: "Chuvas irregulares preocupam produtores do Mato Grosso", source: "Canal Rural", published_at: "2026-07-30", sentiment: "neg", url: "#" },
+      { title: "Corteva expande produção de sementes bioestimulantes", source: "Corteva", published_at: "2026-07-29", sentiment: "pos", url: "#" },
+      { title: "Ruveon inicia operações comerciais nos EUA", source: "Ruveon", published_at: "2026-07-17", sentiment: "neu", url: "#" }
+    ]
+  },
+  {
+    id: 2,
+    week_start: "2026-07-20",
+    week_end: "2026-07-26",
+    title: "Fertilizantes recuam e abrem espaço para margens melhores",
+    published_at: "2026-07-27T12:40:00Z",
+    summary: "Queda nos preços internacionais de fertilizantes trouxe alívio para o custo de produção. Do lado climático, geadas atingiram lavouras de café no Sul de Minas, e o mercado de algodão segue firme com demanda asiática aquecida.",
+    analysis: [
+      { h: "Tendência", p: "Fertilizantes nitrogenados e potássicos recuaram entre 3% e 6% no mês, refletindo maior oferta global e câmbio mais favorável para importação." },
+      { h: "Riscos", p: "Geadas atípicas no Sul de Minas Gerais atingiram lavouras de café em fase de maturação — impacto ainda sendo avaliado por cooperativas locais." },
+      { h: "Oportunidades", p: "Demanda asiática por algodão brasileiro segue aquecida, sustentando preços acima da média histórica para o período." },
+      { h: "Conclusão", p: "Alívio no custeio, mas atenção redobrada às condições climáticas fora do padrão em algumas regiões." }
+    ],
+    sentiments: { pos: 2, neg: 2, neu: 2 },
+    highlights: [
+      { title: "Preços de fertilizantes caem pelo terceiro mês seguido", source: "Infomoney", published_at: "2026-07-24", sentiment: "pos", url: "#" },
+      { title: "Geada atinge lavouras de café no Sul de Minas", source: "Canal Rural", published_at: "2026-07-22", sentiment: "neg", url: "#" }
+    ],
+    articles: [
+      { title: "Algodão brasileiro ganha espaço no mercado asiático", source: "Reuters", published_at: "2026-07-25", sentiment: "pos", url: "#" },
+      { title: "BASF anuncia investimento em planta de biológicos", source: "BASF", published_at: "2026-07-23", sentiment: "pos", url: "#" },
+      { title: "Cooperativas avaliam extensão do prejuízo com geada", source: "Cultivar", published_at: "2026-07-21", sentiment: "neg", url: "#" },
+      { title: "Clima segue instável no Sul do país", source: "CNN Brasil", published_at: "2026-07-20", sentiment: "neu", url: "#" }
+    ]
+  },
+  {
+    id: 1,
+    week_start: "2026-07-13",
+    week_end: "2026-07-19",
+    title: "Exportações de carne batem recorde no primeiro semestre",
+    published_at: "2026-07-20T11:55:00Z",
+    summary: "Dados consolidados do semestre mostram recorde nas exportações de carne bovina, puxado pela demanda da China. Do lado dos grãos, o plantio de trigo avança dentro do cronograma no Sul do país.",
+    analysis: [
+      { h: "Tendência", p: "As exportações de proteína animal seguem em trajetória de alta, com a China respondendo por mais de 40% do volume embarcado no período." },
+      { h: "Riscos", p: "Custo do frete marítimo voltou a subir, o que pode pressionar margens de exportadores nos próximos meses." },
+      { h: "Oportunidades", p: "Abertura de novos mercados na Ásia para carne suína amplia o leque de destinos para frigoríficos brasileiros." },
+      { h: "Conclusão", p: "Semestre positivo para a pecuária de exportação, com atenção ao componente logístico como principal variável de risco." }
+    ],
+    sentiments: { pos: 4, neg: 1, neu: 1 },
+    highlights: [
+      { title: "Exportações de carne bovina batem recorde no semestre", source: "Reuters", published_at: "2026-07-18", sentiment: "pos", url: "#" },
+      { title: "China amplia habilitação de frigoríficos brasileiros", source: "Agrolink", published_at: "2026-07-16", sentiment: "pos", url: "#" }
+    ],
+    articles: [
+      { title: "Plantio de trigo avança dentro do cronograma no Sul", source: "Canal Rural", published_at: "2026-07-19", sentiment: "neu", url: "#" },
+      { title: "Frete marítimo pressiona margens de exportadores", source: "Infomoney", published_at: "2026-07-15", sentiment: "neg", url: "#" },
+      { title: "Novos mercados asiáticos se abrem para carne suína", source: "Reuters", published_at: "2026-07-14", sentiment: "pos", url: "#" },
+      { title: "Embrapa apresenta balanço de pesquisas em pecuária", source: "Embrapa", published_at: "2026-07-13", sentiment: "pos", url: "#" }
+    ]
+  }
+];
+
+const WEEKDAY_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+const FULL_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
+function parseLocalDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+function weekRangeLabel(b) {
+  const s = parseLocalDate(b.week_start), e = parseLocalDate(b.week_end);
+  return `${WEEKDAY_FMT.format(s)} a ${WEEKDAY_FMT.format(e)} de ${e.getFullYear()}`;
+}
+function publishedLabel(iso) {
+  return FULL_FMT.format(new Date(iso));
+}
+function sentimentChips(s) {
+  const parts = [];
+  if (s.pos) parts.push(`<span class="sent-chip pos">+${s.pos} positivas</span>`);
+  if (s.neg) parts.push(`<span class="sent-chip neg">−${s.neg} negativas</span>`);
+  if (s.neu) parts.push(`<span class="sent-chip neu">${s.neu} neutras</span>`);
+  return parts.join("");
+}
+function sentDotClass(s) { return s === "pos" ? "pos" : s === "neg" ? "neg" : "neu"; }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderList() {
+  const head = `
+    <div class="list-head">
+      <h1>Boletins semanais</h1>
+      <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
+    </div>`;
+  const cards = MOCK_BULLETINS.map(b => `
+    <a class="bulletin-card" data-id="${b.id}" href="#/boletim/${b.id}">
+      <div class="eyebrow">Semana de ${weekRangeLabel(b)}</div>
+      <h2>${escapeHtml(b.title)}</h2>
+      <p class="excerpt">${escapeHtml(b.summary)}</p>
+      <div class="card-foot">
+        <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
+        <span class="read-link">Ler boletim completo →</span>
+      </div>
+    </a>`).join("");
+  document.getElementById("app").innerHTML = head + cards;
+  document.querySelectorAll(".bulletin-card").forEach(card => {
+    card.onclick = (e) => { e.preventDefault(); location.hash = `#/boletim/${card.dataset.id}`; };
+  });
+}
+
+function renderDetail(id) {
+  const b = MOCK_BULLETINS.find(x => x.id === Number(id));
+  if (!b) { renderList(); return; }
+
+  const highlights = b.highlights.map(h => `
+    <a class="highlight-card" href="${h.url}" target="_blank" rel="noopener">
+      <div class="h-title">${escapeHtml(h.title)}</div>
+      <div class="h-meta">
+        <span>${escapeHtml(h.source)}</span>
+        <span class="dot">·</span>
+        <span>${WEEKDAY_FMT.format(parseLocalDate(h.published_at))}</span>
+        <span class="dot">·</span>
+        <span class="sent-chip ${sentDotClass(h.sentiment)}">${h.sentiment === "pos" ? "positiva" : h.sentiment === "neg" ? "negativa" : "neutra"}</span>
+      </div>
+    </a>`).join("");
+
+  const analysisHtml = b.analysis.map(a => `<h4>${escapeHtml(a.h)}</h4><p>${escapeHtml(a.p)}</p>`).join("");
+
+  const articleItems = b.articles.map(a => `
+    <li>
+      <a class="al-title" href="${a.url}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>
+      <span class="al-meta">${escapeHtml(a.source)} · ${WEEKDAY_FMT.format(parseLocalDate(a.published_at))}</span>
+    </li>`).join("");
+
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Todos os boletins</button>
+    <article class="bulletin">
+      <div class="eyebrow">Boletim semanal</div>
+      <h1>${escapeHtml(b.title)}</h1>
+      <div class="meta-row">
+        <span>Semana de ${weekRangeLabel(b)}</span>
+        <span>·</span>
+        <span>Publicado em ${publishedLabel(b.published_at)}</span>
+        <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
+      </div>
+      <p class="lead">${escapeHtml(b.summary)}</p>
+
+      <section class="block">
+        <h3>Destaques da semana</h3>
+        <div class="highlight-grid">${highlights}</div>
+      </section>
+
+      <section class="block">
+        <h3>Análise e conclusão</h3>
+        <div class="analysis-body">${analysisHtml}</div>
+      </section>
+
+      <section class="block">
+        <h3>Todos os artigos desta semana (${b.articles.length + b.highlights.length})</h3>
+        <ul class="article-list">${articleItems}</ul>
+      </section>
+    </article>`;
+  document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
+  window.scrollTo(0, 0);
+}
+
+function route() {
+  const hash = location.hash || "#/";
+  const m = hash.match(/^#\/boletim\/(\d+)/);
+  if (m) renderDetail(m[1]);
+  else renderList();
+}
+window.addEventListener("hashchange", route);
+document.getElementById("logo-btn").onclick = () => { location.hash = "#/"; };
+document.getElementById("nav-boletins").onclick = (e) => { e.preventDefault(); location.hash = "#/"; };
+document.getElementById("nav-sobre").onclick = (e) => { e.preventDefault(); alert("Página \"Sobre\" ainda não desenhada — só um placeholder nesta prévia."); };
+route();
+</script>
+</body>
+</html>
