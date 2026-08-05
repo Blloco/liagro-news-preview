@@ -343,43 +343,98 @@
     font-weight: 500;
   }
 
-  /* Sponsored-banner placeholder. Sits at the first natural reading pause
-     (after the lead, before the reader moves into "Destaques da semana")
-     — a standard in-article ad position with high viewability that stays
-     well clear of any nav/link-heavy area, consistent with AdSense's
-     rules on ad/content separation and against placement that invites
-     accidental clicks. Deliberately just one slot per bulletin — AdSense
-     also penalizes excessive ad density, so this preview shows only the
-     single best-placed unit rather than one at every section boundary. */
-  .ad-slot {
-    background: var(--paper-2);
-    border: 1px dashed var(--line);
-    border-radius: 8px;
-    min-height: 250px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    margin: 0 0 36px;
-    padding: 20px;
-    text-align: center;
-  }
-  .ad-slot .ad-slot-label {
+  /* Sponsored-banner placeholder. Kept OUT of the article's reading flow —
+     fixed to the page chrome instead of sitting inside the macrocard, so it
+     never competes with editorial content or invites accidental clicks near
+     text/links, consistent with AdSense's rules on ad/content separation.
+     Two responsive variants, only one visible at a time:
+       .ad-rail   — desktop skyscraper, fixed to the right margin, clear of
+                    the centered 880px content column (needs a wide viewport
+                    so it never overlaps the article).
+       .ad-anchor — mobile/tablet anchor bar, fixed to the bottom of the
+                    viewport, matching AdSense's actual "Anchor ad" format,
+                    including the visible close control that format requires. */
+  .ad-slot-label {
     text-transform: uppercase;
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: .09em;
     color: var(--muted);
   }
-  .ad-slot .ad-slot-note {
+  .ad-slot-note {
     font-family: 'Lora', serif;
     font-size: 14px;
     color: var(--muted);
-    max-width: 340px;
     line-height: 1.5;
   }
-  .ad-slot .ad-slot-dim { font-size: 12px; color: var(--muted); opacity: .75; }
+  .ad-slot-dim { font-size: 12px; color: var(--muted); opacity: .75; }
+
+  .ad-rail {
+    display: none;
+    position: fixed;
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
+    width: 160px;
+    min-height: 400px;
+    background: var(--paper-2);
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 18px 14px;
+    text-align: center;
+    z-index: 20;
+  }
+  .ad-rail .ad-slot-note { max-width: 128px; }
+
+  .ad-anchor {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--paper-2);
+    border-top: 1px dashed var(--line);
+    box-shadow: 0 -4px 14px rgba(28,38,32,.08);
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 44px 12px 16px;
+    text-align: center;
+    z-index: 20;
+  }
+  .ad-anchor .ad-slot-note { max-width: 420px; }
+  .ad-anchor-close {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ad-anchor-close:hover { background: var(--paper-2); border-color: var(--muted); }
+
+  @media (min-width: 1300px) {
+    .ad-rail { display: flex; }
+  }
+  @media (max-width: 1299px) {
+    .ad-anchor { display: flex; }
+    main { padding-bottom: 96px; }
+    footer.site { margin-bottom: 76px; }
+  }
 
   section.block { margin-bottom: 40px; }
   section.block > h3 {
@@ -572,6 +627,19 @@
   Análises geradas a partir de fontes públicas, com curadoria e revisão editorial.<br>
   <a class="rss-link" href="feed.xml" target="_blank" rel="noopener"><span class="rss-icon">RSS</span> Feed RSS</a>
 </footer>
+
+<aside class="ad-rail" role="complementary" aria-label="Espaço publicitário">
+  <span class="ad-slot-label">Publicidade</span>
+  <span class="ad-slot-note">Espaço reservado para banner patrocinado (Google AdSense)</span>
+  <span class="ad-slot-dim">Formato skyscraper · ~160×600</span>
+</aside>
+
+<aside class="ad-anchor" id="ad-anchor" role="complementary" aria-label="Espaço publicitário">
+  <span class="ad-slot-label">Publicidade</span>
+  <span class="ad-slot-note">Espaço reservado para banner patrocinado (Google AdSense)</span>
+  <span class="ad-slot-dim">Formato âncora · ~320×50 / 320×100</span>
+  <button class="ad-anchor-close" id="ad-anchor-close" aria-label="Fechar anúncio" title="Fechar anúncio">✕</button>
+</aside>
 
 <script>
 // ---------------------------------------------------------------------
@@ -811,12 +879,6 @@ function bulletinArticleHtml(b, opts) {
       </div>
       <div class="bulletin-body">
         <p class="lead">${escapeHtml(b.summary)}</p>
-
-        <div class="ad-slot" role="complementary" aria-label="Espaço publicitário">
-          <span class="ad-slot-label">Publicidade</span>
-          <span class="ad-slot-note">Espaço reservado para banner patrocinado (Google AdSense)</span>
-          <span class="ad-slot-dim">Formato responsivo · ~728×90 / 300×250</span>
-        </div>
 
         <section class="block">
           <h3>Destaques da semana</h3>
@@ -1124,6 +1186,11 @@ document.getElementById("nav-boletins").onclick = (e) => { e.preventDefault(); l
 document.getElementById("nav-articles").onclick = (e) => { e.preventDefault(); location.hash = "#/artigos"; };
 document.getElementById("nav-keywords").onclick = (e) => { e.preventDefault(); location.hash = "#/palavras-chave"; };
 document.getElementById("nav-sobre").onclick = (e) => { e.preventDefault(); alert("Página \"Sobre\" ainda não desenhada — só um placeholder nesta prévia."); };
+document.getElementById("ad-anchor-close").onclick = () => {
+  document.getElementById("ad-anchor").style.display = "none";
+  document.querySelector("main").style.paddingBottom = "";
+  document.querySelector("footer.site").style.marginBottom = "";
+};
 route();
 </script>
 </body>
