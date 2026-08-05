@@ -104,7 +104,33 @@
     color: var(--accent-2);
     letter-spacing: -.01em;
   }
-  .list-head p { color: var(--ink-soft); font-size: 15.5px; margin: 0; max-width: 560px; }
+  .list-head p { color: var(--ink-soft); font-size: 15.5px; margin: 0 0 14px; max-width: 560px; }
+  .rss-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 5px 12px 5px 10px;
+    border-radius: 20px;
+  }
+  .rss-link:hover { border-color: var(--gold); }
+  .rss-link .rss-icon {
+    width: 14px; height: 14px;
+    background: var(--gold);
+    color: #fff;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  footer.site .rss-link { margin-top: 12px; }
 
   .trending-card {
     background: var(--accent-2);
@@ -265,18 +291,19 @@
     border-left: 3px solid var(--accent);
     border-radius: 8px;
     padding: 16px 20px;
-    text-decoration: none;
-    color: inherit;
   }
   .highlight-card:hover { border-left-color: var(--gold); }
   .highlight-card .h-title {
+    display: block;
     font-family: 'Lora', serif;
     font-size: 16.5px;
     font-weight: 600;
     color: var(--ink);
     margin-bottom: 7px;
     line-height: 1.4;
+    text-decoration: none;
   }
+  .highlight-card .h-title:hover { color: var(--accent-2); text-decoration: underline; }
   .highlight-card .h-meta {
     display: flex;
     align-items: center;
@@ -331,6 +358,77 @@
   .al-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .article-list .al-meta { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
+  /* ---------- home page: latest bulletin embedded + older bulletins ---------- */
+  .latest-eyebrow-row { margin-bottom: 10px; }
+  .latest-badge {
+    display: inline-block;
+    background: var(--pos-bg);
+    color: var(--pos);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 4px 11px;
+    border-radius: 20px;
+  }
+  main #app > article.bulletin {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 34px 8px;
+    margin-bottom: 40px;
+  }
+  .older-bulletins { margin-top: 8px; }
+  .older-head {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 16px;
+  }
+
+  /* ---------- keyword index page ---------- */
+  .kwidx-section { margin-bottom: 32px; }
+  .kwidx-section h3 {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 14px;
+  }
+  .kwidx-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kwidx-chip {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .kwidx-chip:hover { border-color: var(--accent); color: var(--accent-2); }
+
+  /* ---------- keyword detail page ---------- */
+  .kwresult-source-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .kwresult-source-link:hover { text-decoration: underline; }
+  .empty-state {
+    color: var(--muted);
+    font-size: 15px;
+    text-align: center;
+    padding: 46px 20px;
+    background: #fff;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+  }
+
   footer.site {
     border-top: 1px solid var(--line);
     margin-top: 60px;
@@ -358,6 +456,7 @@
     <button class="wordmark" id="logo-btn"><span class="leaf">🌱</span> Liagro News</button>
     <nav class="site-nav">
       <a href="#" id="nav-boletins">Boletins</a>
+      <a href="#" id="nav-keywords">Palavras-chave</a>
       <a href="#" id="nav-sobre">Sobre</a>
     </nav>
   </div>
@@ -367,7 +466,8 @@
 
 <footer class="site">
   <strong>Liagro News</strong> — inteligência para o agronegócio brasileiro.<br>
-  Análises geradas a partir de fontes públicas, com curadoria e revisão editorial.
+  Análises geradas a partir de fontes públicas, com curadoria e revisão editorial.<br>
+  <a class="rss-link" href="feed.xml" target="_blank" rel="noopener"><span class="rss-icon">RSS</span> Feed RSS</a>
 </footer>
 
 <script>
@@ -398,9 +498,10 @@ const MOCK_BULLETINS = [
     ],
     articles: [
       { title: "Preço do milho recua com pressão de exportações americanas", source: "Reuters", published_at: "2026-08-03", sentiment: "neg", url: "#", keywords: ["milho"] },
-      { title: "Chuvas irregulares preocupam produtores do Mato Grosso", source: "Canal Rural", published_at: "2026-07-30", sentiment: "neg", url: "#", keywords: ["clima"] },
+      { title: "Chuvas irregulares preocupam produtores do Mato Grosso", source: "Canal Rural", published_at: "2026-07-30", sentiment: "neg", url: "#", keywords: ["clima", "Mato Grosso"] },
       { title: "Corteva expande produção de sementes bioestimulantes", source: "Corteva", published_at: "2026-07-29", sentiment: "pos", url: "#", keywords: ["Corteva", "sementes"] },
-      { title: "Ruveon inicia operações comerciais nos EUA", source: "Ruveon", published_at: "2026-07-17", sentiment: "neu", url: "#", keywords: ["Ruveon"] }
+      { title: "Ruveon inicia operações comerciais nos EUA", source: "Ruveon", published_at: "2026-07-17", sentiment: "neu", url: "#", keywords: ["Ruveon"] },
+      { title: "Expansão da soja impulsiona fronteira agrícola no Norte do país", source: "Globo Rural", published_at: "2026-07-28", sentiment: "pos", url: "#", keywords: ["soja", "Norte", "Tocantins"] }
     ]
   },
   {
@@ -419,13 +520,15 @@ const MOCK_BULLETINS = [
     sentiments: { pos: 2, neg: 2, neu: 2 },
     highlights: [
       { title: "Preços de fertilizantes caem pelo terceiro mês seguido", source: "Infomoney", published_at: "2026-07-24", sentiment: "pos", url: "#", keywords: ["fertilizantes"] },
-      { title: "Geada atinge lavouras de café no Sul de Minas", source: "Canal Rural", published_at: "2026-07-22", sentiment: "neg", url: "#", keywords: ["café", "clima", "Sul"] }
+      { title: "Geada atinge lavouras de café no Sul de Minas", source: "Canal Rural", published_at: "2026-07-22", sentiment: "neg", url: "#", keywords: ["café", "clima", "Sudeste", "Minas Gerais"] }
     ],
     articles: [
       { title: "Algodão brasileiro ganha espaço no mercado asiático", source: "Reuters", published_at: "2026-07-25", sentiment: "pos", url: "#", keywords: ["algodão"] },
       { title: "BASF anuncia investimento em planta de biológicos", source: "BASF", published_at: "2026-07-23", sentiment: "pos", url: "#", keywords: ["BASF", "bioinsumos"] },
       { title: "Cooperativas avaliam extensão do prejuízo com geada", source: "Cultivar", published_at: "2026-07-21", sentiment: "neg", url: "#", keywords: ["clima"] },
-      { title: "Clima segue instável no Sul do país", source: "CNN Brasil", published_at: "2026-07-20", sentiment: "neu", url: "#", keywords: ["clima", "Sul"] }
+      { title: "Clima segue instável no Sul do país", source: "CNN Brasil", published_at: "2026-07-20", sentiment: "neu", url: "#", keywords: ["clima", "Sul"] },
+      { title: "Produção de soja no Pará cresce puxada por novas áreas no Norte", source: "Globo Rural", published_at: "2026-07-22", sentiment: "neu", url: "#", keywords: ["soja", "Norte", "Pará"] },
+      { title: "Irrigação amplia área plantada de fruticultura no Nordeste", source: "Agrolink", published_at: "2026-07-26", sentiment: "pos", url: "#", keywords: ["Nordeste"] }
     ]
   },
   {
@@ -447,13 +550,49 @@ const MOCK_BULLETINS = [
       { title: "China amplia habilitação de frigoríficos brasileiros", source: "Agrolink", published_at: "2026-07-16", sentiment: "pos", url: "#", keywords: [] }
     ],
     articles: [
-      { title: "Plantio de trigo avança dentro do cronograma no Sul", source: "Canal Rural", published_at: "2026-07-19", sentiment: "neu", url: "#", keywords: ["trigo", "Sul"] },
+      { title: "Plantio de trigo avança dentro do cronograma no Sul", source: "Canal Rural", published_at: "2026-07-19", sentiment: "neu", url: "#", keywords: ["trigo", "Sul", "Paraná"] },
       { title: "Frete marítimo pressiona margens de exportadores", source: "Infomoney", published_at: "2026-07-15", sentiment: "neg", url: "#", keywords: [] },
       { title: "Novos mercados asiáticos se abrem para carne suína", source: "Reuters", published_at: "2026-07-14", sentiment: "pos", url: "#", keywords: [] },
-      { title: "Embrapa apresenta balanço de pesquisas em pecuária", source: "Embrapa", published_at: "2026-07-13", sentiment: "pos", url: "#", keywords: [] }
+      { title: "Embrapa apresenta balanço de pesquisas em pecuária", source: "Embrapa", published_at: "2026-07-13", sentiment: "pos", url: "#", keywords: [] },
+      { title: "Exportação de frutas do Vale do São Francisco cresce no semestre", source: "Canal Rural", published_at: "2026-07-16", sentiment: "pos", url: "#", keywords: ["Nordeste", "uva"] },
+      { title: "Colheita de café avança em São Paulo, no Sudeste", source: "Cultivar", published_at: "2026-07-17", sentiment: "pos", url: "#", keywords: ["café", "Sudeste", "São Paulo"] }
     ]
   }
 ];
+
+// Full keyword taxonomy — mirrors the real "keywords" table (migrations
+// 009/010/015/016). Powers the "Palavras-chave" browse page; clicking any
+// term filters MOCK_BULLETINS' highlights/articles for that exact tag.
+const MOCK_ALL_KEYWORDS = {
+  cultura: [
+    "soja", "milho", "algodão", "café", "cana-de-açúcar", "trigo", "arroz", "feijão",
+    "sorgo", "girassol", "amendoim", "mandioca", "cevada", "aveia", "gergelim",
+    "mamona", "cacau", "uva", "citros", "maçã", "tomate", "batata", "fumo"
+  ],
+  insumo: ["herbicidas", "fungicidas", "inseticidas", "nematicidas", "fertilizantes", "biofertilizantes", "biodefensivos", "bioinsumos", "sementes"],
+  regional: [
+    "Cerrado", "Sul", "Sudeste", "Nordeste", "Norte",
+    "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal",
+    "Espírito Santo", "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul",
+    "Minas Gerais", "Pará", "Paraíba", "Paraná", "Pernambuco", "Piauí",
+    "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia",
+    "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
+  ],
+  empresa: [
+    "Bayer", "BASF", "Corteva", "FMC", "Syngenta", "Ruveon",
+    "Yara", "Mosaic", "ICL", "Heringer",
+    "UPL", "Nufarm", "Adama", "Ihara", "TMG",
+    "Cargill", "Bunge", "ADM", "Louis Dreyfus", "Amaggi", "COFCO",
+    "JBS", "Marfrig", "BRF", "Minerva",
+    "John Deere", "Case IH", "New Holland", "AGCO", "Jacto", "Stara",
+    "Raízen", "Cosan"
+  ],
+  geral: ["clima"]
+};
+const KEYWORD_CATEGORY_LABELS = {
+  cultura: "Culturas", insumo: "Insumos", regional: "Regiões e estados",
+  empresa: "Empresas", geral: "Geral"
+};
 
 const WEEKDAY_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
 const FULL_FMT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
@@ -478,12 +617,14 @@ function sentimentChips(s) {
 }
 function sentDotClass(s) { return s === "pos" ? "pos" : s === "neg" ? "neg" : "neu"; }
 function sentLabel(s) { return s === "pos" ? "positiva" : s === "neg" ? "negativa" : "neutra"; }
-// Keyword tags matched by the system (see migrations 009/010/015) — only
+function keywordHref(term) { return `#/palavra-chave/${encodeURIComponent(term)}`; }
+// Keyword tags matched by the system (see migrations 009/010/015/016) — only
 // rendered when an article actually matched at least one term, same as the
-// real word-boundary matching in scraper/runner.py.
+// real word-boundary matching in scraper/runner.py. Each tag links to the
+// keyword's filtered page (see renderKeywordDetail).
 function kwRow(keywords) {
   if (!keywords || !keywords.length) return "";
-  return `<div class="kw-row">${keywords.map(k => `<span class="kw-chip">${escapeHtml(k)}</span>`).join("")}</div>`;
+  return `<div class="kw-row">${keywords.map(k => `<a class="kw-chip" href="${keywordHref(k)}">${escapeHtml(k)}</a>`).join("")}</div>`;
 }
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -516,36 +657,15 @@ function trendingCard(bulletins) {
     </div>`;
 }
 
-function renderList() {
-  const head = `
-    <div class="list-head">
-      <h1>Boletins semanais</h1>
-      <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
-    </div>`;
-  const trending = trendingCard(MOCK_BULLETINS);
-  const cards = MOCK_BULLETINS.map(b => `
-    <a class="bulletin-card" data-id="${b.id}" href="#/boletim/${b.id}">
-      <div class="eyebrow">Semana de ${weekRangeLabel(b)}</div>
-      <h2>${escapeHtml(b.title)}</h2>
-      <p class="excerpt">${escapeHtml(b.summary)}</p>
-      <div class="card-foot">
-        <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
-        <span class="read-link">Ler boletim completo →</span>
-      </div>
-    </a>`).join("");
-  document.getElementById("app").innerHTML = head + trending + cards;
-  document.querySelectorAll(".bulletin-card").forEach(card => {
-    card.onclick = (e) => { e.preventDefault(); location.hash = `#/boletim/${card.dataset.id}`; };
-  });
-}
-
-function renderDetail(id) {
-  const b = MOCK_BULLETINS.find(x => x.id === Number(id));
-  if (!b) { renderList(); return; }
-
+// Renders the full bulletin content (eyebrow/título/meta/lead/destaques/
+// análise/artigos) as a single <article>. Reused both on the boletim's own
+// detail page and embedded inline for the most recent edition on the home
+// page, so the two never drift apart.
+function bulletinArticleHtml(b, opts) {
+  opts = opts || {};
   const highlights = b.highlights.map(h => `
-    <a class="highlight-card" href="${h.url}" target="_blank" rel="noopener">
-      <div class="h-title">${escapeHtml(h.title)}</div>
+    <div class="highlight-card">
+      <a class="h-title" href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>
       <div class="h-meta">
         <span>${escapeHtml(h.source)}</span>
         <span class="dot">·</span>
@@ -554,7 +674,7 @@ function renderDetail(id) {
         <span class="sent-chip ${sentDotClass(h.sentiment)}">${sentLabel(h.sentiment)}</span>
       </div>
       ${kwRow(h.keywords)}
-    </a>`).join("");
+    </div>`).join("");
 
   const analysisHtml = b.analysis.map(a => `<h4>${escapeHtml(a.h)}</h4><p>${escapeHtml(a.p)}</p>`).join("");
 
@@ -570,10 +690,9 @@ function renderDetail(id) {
       </div>
     </li>`).join("");
 
-  document.getElementById("app").innerHTML = `
-    <button class="back-link" id="back-btn">← Todos os boletins</button>
-    <article class="bulletin">
-      <div class="eyebrow">Boletim semanal</div>
+  return `
+    <article class="bulletin" id="bulletin-${b.id}">
+      <div class="eyebrow">${opts.eyebrow || "Boletim semanal"}</div>
       <h1>${escapeHtml(b.title)}</h1>
       <div class="meta-row">
         <span>Semana de ${weekRangeLabel(b)}</span>
@@ -598,19 +717,129 @@ function renderDetail(id) {
         <ul class="article-list">${articleItems}</ul>
       </section>
     </article>`;
+}
+
+function renderList() {
+  const [latest, ...older] = MOCK_BULLETINS;
+  const head = `
+    <div class="list-head">
+      <h1>Boletins semanais</h1>
+      <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
+      <a class="rss-link" href="feed.xml" target="_blank" rel="noopener"><span class="rss-icon">RSS</span> Assine os boletins por RSS</a>
+    </div>`;
+  const trending = trendingCard(MOCK_BULLETINS);
+  const latestHtml = latest ? `
+    <div class="latest-eyebrow-row">
+      <span class="latest-badge">Edição mais recente</span>
+    </div>
+    ${bulletinArticleHtml(latest, { eyebrow: "Boletim semanal · edição mais recente" })}` : "";
+  const olderHtml = older.length ? `
+    <section class="older-bulletins">
+      <h3 class="older-head">Boletins anteriores</h3>
+      ${older.map(b => `
+        <a class="bulletin-card" data-id="${b.id}" href="#/boletim/${b.id}">
+          <div class="eyebrow">Semana de ${weekRangeLabel(b)}</div>
+          <h2>${escapeHtml(b.title)}</h2>
+          <p class="excerpt">${escapeHtml(b.summary)}</p>
+          <div class="card-foot">
+            <div class="sentiment-row">${sentimentChips(b.sentiments)}</div>
+            <span class="read-link">Ler boletim completo →</span>
+          </div>
+        </a>`).join("")}
+    </section>` : "";
+  document.getElementById("app").innerHTML = head + trending + latestHtml + olderHtml;
+  document.querySelectorAll(".bulletin-card").forEach(card => {
+    card.onclick = (e) => { e.preventDefault(); location.hash = `#/boletim/${card.dataset.id}`; };
+  });
+}
+
+function renderDetail(id) {
+  const b = MOCK_BULLETINS.find(x => x.id === Number(id));
+  if (!b) { renderList(); return; }
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Todos os boletins</button>
+    ${bulletinArticleHtml(b)}`;
   document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
+  window.scrollTo(0, 0);
+}
+
+// Full browsable index of every keyword the system tracks, grouped the
+// same way as the "keywords" table's category column. Each term links to
+// its own filtered view (renderKeywordDetail).
+function renderKeywordsIndex() {
+  const order = ["cultura", "insumo", "regional", "empresa", "geral"];
+  const sections = order.filter(cat => (MOCK_ALL_KEYWORDS[cat] || []).length).map(cat => `
+    <div class="kwidx-section">
+      <h3>${escapeHtml(KEYWORD_CATEGORY_LABELS[cat] || cat)}</h3>
+      <div class="kwidx-chips">
+        ${MOCK_ALL_KEYWORDS[cat].map(term => `<a class="kwidx-chip" href="${keywordHref(term)}">${escapeHtml(term)}</a>`).join("")}
+      </div>
+    </div>`).join("");
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Todos os boletins</button>
+    <div class="list-head">
+      <h1>Palavras-chave</h1>
+      <p>Todos os termos que o sistema acompanha — culturas, insumos, regiões, estados e empresas do agronegócio. Clique em qualquer um para ver as notícias relacionadas.</p>
+    </div>
+    ${sections}`;
+  document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
+  window.scrollTo(0, 0);
+}
+
+// Filters every highlight/artigo across all published bulletins for an
+// exact keyword match, newest bulletin first — a simple stand-in for what
+// would be a real query against the articles/keywords tables.
+function renderKeywordDetail(term) {
+  const matches = [];
+  MOCK_BULLETINS.forEach(b => {
+    [...b.highlights, ...b.articles].forEach(item => {
+      if ((item.keywords || []).some(k => k.toLowerCase() === term.toLowerCase())) {
+        matches.push({ item, bulletin: b });
+      }
+    });
+  });
+
+  const resultsHtml = matches.length ? `
+    <ul class="article-list">
+      ${matches.map(({ item, bulletin }) => `
+        <li>
+          <div class="al-top">
+            <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
+            <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+          </div>
+          <div class="al-bottom">
+            <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
+              · <a class="kwresult-source-link" href="#/boletim/${bulletin.id}">ver no boletim</a></span>
+            ${kwRow(item.keywords)}
+          </div>
+        </li>`).join("")}
+    </ul>` : `<p class="empty-state">Nenhuma notícia com a palavra-chave "${escapeHtml(term)}" nos boletins publicados até agora.</p>`;
+
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Palavras-chave</button>
+    <div class="list-head">
+      <div class="eyebrow">Palavra-chave</div>
+      <h1>${escapeHtml(term)}</h1>
+      <p>${matches.length} notícia${matches.length === 1 ? "" : "s"} encontrada${matches.length === 1 ? "" : "s"} nos boletins publicados.</p>
+    </div>
+    ${resultsHtml}`;
+  document.getElementById("back-btn").onclick = () => { location.hash = "#/palavras-chave"; };
   window.scrollTo(0, 0);
 }
 
 function route() {
   const hash = location.hash || "#/";
-  const m = hash.match(/^#\/boletim\/(\d+)/);
-  if (m) renderDetail(m[1]);
-  else renderList();
+  let m = hash.match(/^#\/boletim\/(\d+)/);
+  if (m) { renderDetail(m[1]); return; }
+  m = hash.match(/^#\/palavra-chave\/([^/]+)/);
+  if (m) { renderKeywordDetail(decodeURIComponent(m[1])); return; }
+  if (/^#\/palavras-chave/.test(hash)) { renderKeywordsIndex(); return; }
+  renderList();
 }
 window.addEventListener("hashchange", route);
 document.getElementById("logo-btn").onclick = () => { location.hash = "#/"; };
 document.getElementById("nav-boletins").onclick = (e) => { e.preventDefault(); location.hash = "#/"; };
+document.getElementById("nav-keywords").onclick = (e) => { e.preventDefault(); location.hash = "#/palavras-chave"; };
 document.getElementById("nav-sobre").onclick = (e) => { e.preventDefault(); alert("Página \"Sobre\" ainda não desenhada — só um placeholder nesta prévia."); };
 route();
 </script>
