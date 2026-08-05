@@ -39,7 +39,7 @@
   .card .big { font-size: 32px; font-weight: 700; margin: 4px 0; }
   .semaforo-card .semaforo-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
   .semaforo-card .semaforo-label { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
-  .bulletin-title-input { flex: 1; font-size: 17px; font-weight: 700; font-family: inherit; color: var(--text); border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; margin-right: 10px; background: transparent; }
+  .bulletin-title-input { flex: 1; font-size: 17px; font-weight: 700; font-family: inherit; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-right: 10px; background: #fff; }
   .bulletin-title-input:hover { border-color: var(--border); }
   .bulletin-title-input:focus { border-color: var(--accent); outline: none; background: #fff; }
   .candidate-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
@@ -84,7 +84,7 @@
   .rte-toolbar { display: flex; gap: 4px; margin: 6px 0; }
   .rte-toolbar button { background: #fff; color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
   .rte-toolbar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .rte-box { width: 100%; min-height: 80px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; line-height: 1.5; }
+  .rte-box { width: 100%; min-height: 80px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 14px; line-height: 1.5; background: #fff; }
   .rte-box:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   .rte-box ul, .rte-box ol { margin: 6px 0; padding-left: 22px; }
   .highlight-list { list-style: none; margin: 0 0 14px; padding: 0; }
@@ -99,8 +99,19 @@
   .badge.regional { background: #eef2fb; color: #3a5a9b; }
   .badge.geral { background: #eeeeee; color: var(--gray); }
   .badge.country { background: #eef6f6; color: #2f6f6f; }
+  /* collector_type tag (migration 014) — RSS vs. plain HTML scraping, the
+     only two scraper base classes in scraper/sources/*.py today. */
+  .badge.rss { background: #fdece0; color: #c2410c; }
+  .badge.html { background: #eef1f5; color: #475569; }
   .warn-msg { color: #b45309; background: #fff8ec; border: 1px solid #f3dfb1; border-radius: 8px; padding: 8px 12px; }
-  select#scheduler-frequency-select, select#keyword-category-select, select.source-country-select { border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; font-size: 13px; }
+  select#scheduler-frequency-select, select#keyword-category-select, select.source-country-select, select.source-collector-select { border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; font-size: 13px; }
+  /* Without a fixed width, browsers auto-size a <select> to fit its widest
+     *option* (e.g. "Emirados Árabes Unidos"), not the shorter selected
+     value — which pushed this dropdown onto its own line instead of sitting
+     next to the source name/URL. min-width keeps short values comfortably
+     readable; width just caps how wide it's allowed to get. */
+  select.source-country-select { width: 120px; min-width: 90px; flex: 0 0 auto; text-overflow: ellipsis; }
+  select.source-collector-select { width: 72px; min-width: 64px; flex: 0 0 auto; }
   /* Player-style status controls (sources' Ativo/Pausado/Arquivado, scheduler's Ativo/Pausado) —
      icon buttons instead of a dropdown; the current state gets a solid color fill so it reads
      at a glance, like the play/pause indicator on a media player. "Pendente" is deliberately not
@@ -113,6 +124,8 @@
   .status-icon-btn.icon-delete:hover:not(:disabled) { background: var(--red); border-color: var(--red); color: #fff; }
   .status-icon-btn.icon-publish { color: var(--green); }
   .status-icon-btn.icon-publish:hover:not(:disabled) { background: var(--green); border-color: var(--green); color: #fff; }
+  .status-icon-btn.icon-pause { color: #b45309; }
+  .status-icon-btn.icon-pause:hover:not(:disabled) { background: #b45309; border-color: #b45309; color: #fff; }
   #sources-list li.article-item { border-left: 3px solid transparent; padding-left: 10px; transition: opacity .15s ease; }
   #sources-list li.source-implemented { border-left-color: var(--accent); }
   #sources-list li.source-unimplemented { border-left-color: var(--border); opacity: 0.68; }
@@ -243,7 +256,7 @@
     </section>
 
     <section id="browser-section" class="group-artigos">
-      <h2>Artigos</h2>
+      <h2>Artigos analisados</h2>
       <div class="row filters" style="margin-bottom: 14px;">
         <input type="text" id="search-input" placeholder="Buscar por palavra-chave…">
         <button id="search-btn">Buscar</button>
@@ -270,8 +283,10 @@
       <h2>Boletins</h2>
       <p class="status-msg">Resumo semanal gerado por IA a partir das análises da semana. Um rascunho é criado automaticamente toda segunda-feira — edite o texto abaixo antes de publicar.</p>
       <ul class="article-list" id="bulletin-week-list"></ul>
+    </section>
 
-      <div id="bulletin-editor" class="hidden" style="margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+    <section id="bulletin-editor" class="hidden group-boletim">
+      <h2>Editor do boletim selecionado</h2>
         <div class="row" style="justify-content:space-between; margin-bottom:4px; align-items:center;">
           <input type="text" id="bulletin-editor-title-input" class="bulletin-title-input" placeholder="Título do boletim">
           <span class="badge neutro" id="bulletin-status-badge"></span>
@@ -296,7 +311,7 @@
         </div>
         <div id="bulletin-analysis-input" class="rte-box" style="min-height:140px;" contenteditable="true"></div>
 
-        <h4 style="margin:20px 0 8px;">Artigos e destaques da semana (<span id="bulletin-article-count">0</span> selecionado(s))</h4>
+        <h4 style="margin:20px 0 8px;">Artigos e destaques da semana (<span id="bulletin-article-count">0</span> selecionado(s), <span id="bulletin-highlight-count">0</span> em destaque)</h4>
         <p class="status-msg">O sistema sugere os artigos analisados dentro do período do boletim. Marque "Incluir" para os que devem entrar no boletim e "Destaque" para os que aparecerão na seção de destaques.</p>
         <div id="bulletin-candidates-list"></div>
 
@@ -312,14 +327,13 @@
           <span class="status-msg" id="bulletin-selection-status"></span>
         </div>
 
-        <div class="row" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+        <div class="row" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px; justify-content:flex-end;">
+          <span class="status-msg" id="bulletin-editor-status"></span>
+          <a href="#" id="bulletin-portal-link" class="hidden" target="_blank" rel="noopener">Ver no portal ↗</a>
           <button class="secondary" id="bulletin-save-btn">Salvar rascunho</button>
           <button id="bulletin-publish-btn">Publicar</button>
-          <a href="#" id="bulletin-portal-link" class="hidden" target="_blank" rel="noopener">Ver no portal ↗</a>
-          <span class="status-msg" id="bulletin-editor-status"></span>
         </div>
-        <p class="status-msg" id="bulletin-publish-note">Ainda não há um portal público da Liagro configurado — "Publicar" hoje apenas marca o boletim como publicado internamente. Quando o portal existir, este botão passará a enviar o conteúdo para lá também.</p>
-      </div>
+      <p class="status-msg" id="bulletin-publish-note">Ainda não há um portal público da Liagro configurado — "Publicar" hoje apenas marca o boletim como publicado internamente. Quando o portal existir, este botão passará a enviar o conteúdo para lá também.</p>
     </section>
 
     </div>
@@ -331,7 +345,7 @@
       <ul class="article-list" id="sources-list"></ul>
 
       <div class="row" style="margin-top:14px;">
-        <button class="secondary" id="add-source-btn">+ Adicionar site</button>
+        <button class="secondary" id="add-source-btn">+ Adicionar fonte</button>
       </div>
       <div id="add-source-form" class="hidden inline-form" style="margin-top:14px;">
         <label>Nome do site</label>
@@ -347,6 +361,25 @@
         <div class="row">
           <button id="source-save-btn">Adicionar</button>
           <button class="secondary" id="source-cancel-btn">Cancelar</button>
+        </div>
+      </div>
+      <div id="edit-source-form" class="hidden inline-form" style="margin-top:14px;">
+        <p style="font-weight:600; margin:0 0 10px;">Editando: <span id="edit-source-name-label"></span></p>
+        <input type="hidden" id="edit-source-id">
+        <label>Nome do site</label>
+        <input type="text" id="edit-source-name-input">
+        <label>URL</label>
+        <input type="text" id="edit-source-url-input" placeholder="https://...">
+        <label>Feed RSS (opcional)</label>
+        <input type="text" id="edit-source-feed-input" placeholder="https://.../rss">
+        <label>Notas (opcional)</label>
+        <input type="text" id="edit-source-notes-input" placeholder="Ex.: prioridade, dificuldades esperadas de scraping…">
+        <label>País</label>
+        <select id="edit-source-country-input"></select>
+        <p style="font-size:12.5px; color:#64748b; margin:2px 0 0;">O método de coleta (RSS/HTML) é detectado automaticamente pelo sistema e não é editável aqui.</p>
+        <div class="row">
+          <button id="edit-source-save-btn">Salvar alterações</button>
+          <button class="secondary" id="edit-source-cancel-btn">Cancelar</button>
         </div>
       </div>
       <p class="status-msg" id="sources-status"></p>
@@ -527,12 +560,12 @@ const MOCK_BULLETINS = [
 
 let MOCK_SOURCE_ID = 100;
 const MOCK_SOURCES = [
-  { id: 1, key: "embrapa", name: "Embrapa", url: "https://www.embrapa.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil" },
-  { id: 2, key: "agrolink", name: "Agrolink", url: "https://www.agrolink.com.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil" },
-  { id: 3, key: "reuters", name: "Reuters", url: "https://www.reuters.com/", feed_url: null, status: "active", implemented: true, notes: null, country: "Internacional" },
-  { id: 4, key: "bayer", name: "Bayer", url: "https://www.bayer.com/", feed_url: null, status: "paused", implemented: true, notes: "Pausado temporariamente — muitas notícias fora do escopo de Crop Science.", country: "Alemanha" },
-  { id: 5, key: "cnn_brasil", name: "CNN Brasil", url: "https://www.cnnbrasil.com.br/", feed_url: null, status: "archived", implemented: true, notes: "Baixo volume de notícias relevantes de agro.", country: "Brasil" },
-  { id: 6, key: "noticias_agricolas", name: "Notícias Agrícolas", url: "https://www.noticiasagricolas.com.br/", feed_url: "https://www.noticiasagricolas.com.br/rss", status: "pending", implemented: false, notes: "Sugerido pela operadora — tem feed RSS, aguardando implementação do coletor.", country: null },
+  { id: 1, key: "embrapa", name: "Embrapa", url: "https://www.embrapa.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil", collector_type: "rss" },
+  { id: 2, key: "agrolink", name: "Agrolink", url: "https://www.agrolink.com.br/", feed_url: null, status: "active", implemented: true, notes: null, country: "Brasil", collector_type: "html" },
+  { id: 3, key: "reuters", name: "Reuters", url: "https://www.reuters.com/", feed_url: null, status: "active", implemented: true, notes: null, country: "Internacional", collector_type: "html" },
+  { id: 4, key: "bayer", name: "Bayer", url: "https://www.bayer.com/", feed_url: null, status: "paused", implemented: true, notes: "Pausado temporariamente — muitas notícias fora do escopo de Crop Science.", country: "Alemanha", collector_type: "html" },
+  { id: 5, key: "cnn_brasil", name: "CNN Brasil", url: "https://www.cnnbrasil.com.br/", feed_url: null, status: "archived", implemented: true, notes: "Baixo volume de notícias relevantes de agro.", country: "Brasil", collector_type: "html" },
+  { id: 6, key: "noticias_agricolas", name: "Notícias Agrícolas", url: "https://www.noticiasagricolas.com.br/", feed_url: "https://www.noticiasagricolas.com.br/rss", status: "pending", implemented: false, notes: "Sugerido pela operadora — tem feed RSS, aguardando implementação do coletor.", country: null, collector_type: "rss" },
 ];
 
 const MOCK_SCHEDULE = { id: 1, enabled: true, frequency: "daily", last_run_at: new Date(Date.now() - 14 * 3600000).toISOString() };
@@ -667,6 +700,12 @@ async function api(action, params = {}) {
       return { bulletin: b };
     }
 
+    case "unpublish_bulletin": {
+      const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
+      if (b) b.status = "draft";
+      return { bulletin: b };
+    }
+
     case "archive_bulletin": {
       const b = MOCK_BULLETINS.find(x => x.id === Number(params.id));
       if (b) b.archived = params.archived;
@@ -684,10 +723,16 @@ async function api(action, params = {}) {
 
     case "add_source": {
       const key = (params.name || "site").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "site";
+      // Mock stand-in for the real backend's detectRssFeed() probe — the
+      // preview can't fetch arbitrary external sites from a file:// page, so
+      // it only recognizes an operator-supplied feed_url as RSS and
+      // otherwise defaults to HTML (the real Edge Function actually fetches
+      // the URL and checks for an advertised <link rel="alternate"> feed).
       const source = {
         id: ++MOCK_SOURCE_ID, key, name: params.name, url: params.url || null,
         feed_url: params.feed_url || null, notes: params.notes || null,
         country: params.country || null,
+        collector_type: params.collector_type || (params.feed_url ? "rss" : "html"),
         status: "pending", implemented: false,
       };
       MOCK_SOURCES.push(source);
@@ -706,6 +751,7 @@ async function api(action, params = {}) {
       if (params.feed_url !== undefined) s.feed_url = params.feed_url;
       if (params.notes !== undefined) s.notes = params.notes;
       if (params.country !== undefined) s.country = params.country || null;
+      if (params.collector_type !== undefined) s.collector_type = params.collector_type;
       return { source: s };
     }
 
@@ -1219,10 +1265,13 @@ function countryOptionsHtml(selected) {
   ).join("");
 }
 
+let currentSources = [];
+
 async function loadSources() {
   const list = document.getElementById("sources-list");
   const status = document.getElementById("sources-status");
   const { sources } = await api("sources");
+  currentSources = sources;
   if (!sources.length) {
     list.innerHTML = `<li class="article-sub">Nenhuma fonte cadastrada ainda.</li>`;
     return;
@@ -1234,27 +1283,27 @@ async function loadSources() {
           ${escapeHtml(s.name)}
           ${s.status === "pending" ? '<span class="badge pendente">pendente</span>' : ''}
           ${!s.implemented ? '<span class="badge pendente">sem coletor implementado</span>' : ''}
+          <span class="badge ${s.collector_type === "rss" ? "rss" : "html"}" title="${s.collector_type === "rss" ? "Coletado via feed RSS/Atom" : "Coletado via HTML da página (sem RSS)"}">${s.collector_type === "rss" ? "RSS" : "HTML"}</span>
           ${s.country ? `<span class="badge country">${escapeHtml(s.country)}</span>` : ''}
         </div>
         <div class="article-sub">${s.url ? escapeHtml(s.url) : "sem URL cadastrada"}${s.feed_url ? " • RSS: " + escapeHtml(s.feed_url) : ""}</div>
         ${s.notes ? `<div class="article-sub">${escapeHtml(s.notes)}</div>` : ""}
       </div>
-      <div class="row" style="gap:6px;">
-        <div class="status-icon-group">
-          <button class="status-icon-btn icon-active ${s.status === "active" ? "current" : ""}" data-id="${s.id}" data-status="active" title="Ativar">▶</button>
-          <button class="status-icon-btn icon-paused ${s.status === "paused" ? "current" : ""}" data-id="${s.id}" data-status="paused" title="Pausar">⏸</button>
-          <button class="status-icon-btn icon-archived ${s.status === "archived" ? "current" : ""}" data-id="${s.id}" data-status="archived" title="Arquivar">⏹</button>
-          <span class="icon-divider"></span>
-          <button class="status-icon-btn icon-delete source-delete-btn" data-id="${s.id}" title="Excluir">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
-          </button>
-        </div>
-        <select class="source-country-select" data-id="${s.id}">${countryOptionsHtml(s.country || "")}</select>
+      <div class="status-icon-group">
+        <button class="status-icon-btn icon-active ${s.status === "active" ? "current" : ""}" data-id="${s.id}" data-status="active" title="Ativar">▶</button>
+        <button class="status-icon-btn icon-paused ${s.status === "paused" ? "current" : ""}" data-id="${s.id}" data-status="paused" title="Pausar">⏸</button>
+        <button class="status-icon-btn icon-archived ${s.status === "archived" ? "current" : ""}" data-id="${s.id}" data-status="archived" title="Arquivar">⏹</button>
+        <span class="icon-divider"></span>
+        <button class="status-icon-btn icon-edit source-edit-btn" data-id="${s.id}" title="Editar">✎</button>
+        <span class="icon-divider"></span>
+        <button class="status-icon-btn icon-delete source-delete-btn" data-id="${s.id}" title="Excluir">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+        </button>
       </div>
     </li>
   `).join("");
 
-  list.querySelectorAll(".status-icon-btn:not(.icon-delete)").forEach(btn => {
+  list.querySelectorAll(".status-icon-btn:not(.icon-delete):not(.icon-edit)").forEach(btn => {
     btn.onclick = async () => {
       btn.disabled = true;
       const result = await api("update_source", { id: Number(btn.dataset.id), status: btn.dataset.status });
@@ -1263,13 +1312,8 @@ async function loadSources() {
     };
   });
 
-  list.querySelectorAll(".source-country-select").forEach(sel => {
-    sel.onchange = async () => {
-      sel.disabled = true;
-      const result = await api("update_source", { id: Number(sel.dataset.id), country: sel.value });
-      status.textContent = result.error ? "Erro: " + result.error : "País atualizado (exemplo).";
-      await loadSources();
-    };
+  list.querySelectorAll(".source-edit-btn").forEach(btn => {
+    btn.onclick = () => openEditSourceForm(Number(btn.dataset.id));
   });
 
   list.querySelectorAll(".source-delete-btn").forEach(btn => {
@@ -1283,9 +1327,60 @@ async function loadSources() {
   });
 }
 
+// Country shows as a read-only tag in the list; it's only editable through
+// this form, opened via the "Editar" (✎) icon. collector_type (RSS/HTML) is
+// fully auto-resolved by the backend when a source is added and is
+// intentionally NOT editable here — RSS is always tried first, falling back
+// to HTML automatically, so the operator never has to decide.
+function openEditSourceForm(id) {
+  const s = currentSources.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById("add-source-form").classList.add("hidden");
+  document.getElementById("edit-source-id").value = s.id;
+  document.getElementById("edit-source-name-label").textContent = s.name;
+  document.getElementById("edit-source-name-input").value = s.name || "";
+  document.getElementById("edit-source-url-input").value = s.url || "";
+  document.getElementById("edit-source-feed-input").value = s.feed_url || "";
+  document.getElementById("edit-source-notes-input").value = s.notes || "";
+  document.getElementById("edit-source-country-input").innerHTML = countryOptionsHtml(s.country || "");
+  document.getElementById("sources-status").textContent = "";
+  document.getElementById("edit-source-form").classList.remove("hidden");
+}
+
+document.getElementById("edit-source-cancel-btn").onclick = () => {
+  document.getElementById("edit-source-form").classList.add("hidden");
+  document.getElementById("sources-status").textContent = "";
+};
+
+document.getElementById("edit-source-save-btn").onclick = async () => {
+  const status = document.getElementById("sources-status");
+  const id = Number(document.getElementById("edit-source-id").value);
+  const name = document.getElementById("edit-source-name-input").value.trim();
+  const url = document.getElementById("edit-source-url-input").value.trim();
+  const feed_url = document.getElementById("edit-source-feed-input").value.trim();
+  const notes = document.getElementById("edit-source-notes-input").value.trim();
+  const country = document.getElementById("edit-source-country-input").value;
+  if (!name) { status.textContent = "Informe ao menos o nome do site."; return; }
+
+  const btn = document.getElementById("edit-source-save-btn");
+  btn.disabled = true;
+  status.textContent = "Salvando…";
+  const result = await api("update_source", { id, name, url, feed_url, notes, country });
+  if (result.error) {
+    status.textContent = "Erro ao salvar: " + result.error;
+  } else {
+    document.getElementById("edit-source-form").classList.add("hidden");
+    status.textContent = "Fonte atualizada (exemplo).";
+    await loadSources();
+  }
+  btn.disabled = false;
+};
+
 document.getElementById("source-country-input").innerHTML = countryOptionsHtml("");
+document.getElementById("edit-source-country-input").innerHTML = countryOptionsHtml("");
 
 document.getElementById("add-source-btn").onclick = () => {
+  document.getElementById("edit-source-form").classList.add("hidden");
   document.getElementById("add-source-form").classList.remove("hidden");
 };
 
@@ -1312,7 +1407,7 @@ document.getElementById("source-save-btn").onclick = async () => {
   status.textContent = "Adicionando…";
   await api("add_source", { name, url: url || undefined, feed_url: feed_url || undefined, notes: notes || undefined, country: country || undefined });
   document.getElementById("source-cancel-btn").click();
-  status.textContent = "Site cadastrado (exemplo) — fica pendente até um coletor ser implementado para ele.";
+  status.textContent = "Site cadastrado (exemplo) — o sistema tenta identificar automaticamente se há RSS disponível (RSS é a primeira opção verificada; sem isso, o coletor será por HTML). Fica pendente até um coletor ser implementado para ele.";
   await loadSources();
   btn.disabled = false;
 };
@@ -1437,10 +1532,11 @@ async function loadBulletins() {
         <span class="badge ${b.status === "published" ? "positivo" : "neutro"}">${b.status === "published" ? "publicado" : "rascunho"}</span>
         <div class="status-icon-group">
           <button class="status-icon-btn icon-edit" data-id="${b.id}" title="Editar">✎</button>
-          ${b.status !== "published" || b.archived ? `
+          ${b.status === "published" ? `
+          <button class="status-icon-btn icon-pause" data-id="${b.id}" title="Pausar (tirar de circulação)">⏸</button>` : `
           <button class="status-icon-btn icon-publish" data-id="${b.id}" title="Publicar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          </button>` : ""}
+          </button>`}
           <button class="status-icon-btn icon-archived ${b.archived ? "current" : ""}" data-id="${b.id}" data-current="${b.archived ? "true" : "false"}" title="${b.archived ? "Desarquivar" : "Arquivar"}">⏹</button>
           <span class="icon-divider"></span>
           <button class="status-icon-btn icon-delete" data-id="${b.id}" title="Excluir">
@@ -1469,6 +1565,14 @@ async function loadBulletins() {
       if (!confirm("Publicar este boletim? (prévia — nenhuma ação real é executada)")) return;
       btn.disabled = true;
       await api("publish_bulletin", { id: Number(btn.dataset.id) });
+      await loadBulletins();
+    };
+  });
+  list.querySelectorAll(".icon-pause").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("Pausar este boletim? (prévia — nenhuma ação real é executada) Ele volta a ficar como rascunho e sai de circulação até ser publicado novamente.")) return;
+      btn.disabled = true;
+      await api("unpublish_bulletin", { id: Number(btn.dataset.id) });
       await loadBulletins();
     };
   });
@@ -1508,7 +1612,9 @@ async function loadBulletinCandidates(id) {
 
 function updateCandidateCount() {
   const n = currentCandidates.filter(c => c.included).length;
+  const h = currentCandidates.filter(c => c.included && c.highlight).length;
   document.getElementById("bulletin-article-count").textContent = n;
+  document.getElementById("bulletin-highlight-count").textContent = h;
 }
 
 function renderBulletinCandidates() {
