@@ -25,6 +25,7 @@
     --neu: #6b6456;
     --neu-bg: #efeadf;
     --bulletin-bg: #eef3ec;
+    --bulletin-bg-faded: #f6f8f5;
     --radius: 10px;
   }
   * { box-sizing: border-box; }
@@ -217,8 +218,9 @@
 
   .bulletin-card {
     display: block;
-    background: #fff;
+    background: var(--bulletin-bg-faded);
     border: 1px solid var(--line);
+    border-left: 4px solid var(--bulletin-bg);
     border-radius: var(--radius);
     padding: 26px 28px;
     margin-bottom: 18px;
