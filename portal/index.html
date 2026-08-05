@@ -152,7 +152,10 @@
     font-size: 14.5px;
     padding: 7px 10px 7px 14px;
     border-radius: 22px;
+    text-decoration: none;
+    transition: border-color .15s ease, background .15s ease;
   }
+  .trend-chip:hover { border-color: var(--gold); background: rgba(255,255,255,.14); }
   .trend-chip .trend-count {
     background: var(--gold);
     color: #fff;
@@ -654,7 +657,7 @@ function trendingCard(bulletins) {
   const trending = computeTrending(bulletins, 8);
   if (!trending.length) return "";
   const chips = trending.map(([term, count]) => `
-    <span class="trend-chip">${escapeHtml(term)}<span class="trend-count">${count}</span></span>`).join("");
+    <a class="trend-chip" href="${keywordHref(term)}">${escapeHtml(term)}<span class="trend-count">${count}</span></a>`).join("");
   return `
     <div class="trending-card">
       <div class="eyebrow">Palavras-chave em alta</div>
