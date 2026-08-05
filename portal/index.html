@@ -1025,10 +1025,14 @@ function articleDateMatches(item) {
   const { datePreset, dateFrom, dateTo } = articlesFilterState;
   if (datePreset === "all") return true;
   const d = parseLocalDate(item.published_at);
-  if (datePreset === "7d" || datePreset === "30d") {
+  if (datePreset === "24h" || datePreset === "7d" || datePreset === "30d") {
+    // Article dates carry day precision only (no time-of-day), so "últimas
+    // 24 horas" is expressed as "publicado hoje" — the finest window the
+    // data actually supports — rather than a literal rolling 24h clock.
+    const daysBack = datePreset === "24h" ? 0 : (datePreset === "7d" ? 7 : 30);
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
-    cutoff.setDate(cutoff.getDate() - (datePreset === "7d" ? 7 : 30));
+    cutoff.setDate(cutoff.getDate() - daysBack);
     return d >= cutoff;
   }
   // "custom" — either bound can be open-ended.
@@ -1054,6 +1058,7 @@ function renderArticlesIndex() {
 
   const datePresetDefs = [
     { key: "all", label: "Todo o período" },
+    { key: "24h", label: "Últimas 24 horas" },
     { key: "7d", label: "Últimos 7 dias" },
     { key: "30d", label: "Últimos 30 dias" }
   ];
