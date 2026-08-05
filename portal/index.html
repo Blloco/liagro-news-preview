@@ -159,6 +159,22 @@
   .search-btn:hover { background: var(--accent-2); }
   .search-form.inline { max-width: 420px; margin: 16px 0 0; }
 
+  /* ---------- articles index ---------- */
+  .filter-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .filter-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .filter-btn:hover { border-color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
   .trending-card {
     background: var(--accent-2);
     border-radius: var(--radius);
@@ -486,6 +502,7 @@
     <button class="wordmark" id="logo-btn"><span class="leaf">🌱</span> Liagro News</button>
     <nav class="site-nav">
       <a href="#" id="nav-boletins">Boletins</a>
+      <a href="#" id="nav-articles">Artigos</a>
       <a href="#" id="nav-keywords">Palavras-chave</a>
       <a href="#" id="nav-sobre">Sobre</a>
     </nav>
@@ -807,6 +824,64 @@ function renderDetail(id) {
   window.scrollTo(0, 0);
 }
 
+// Flat, reverse-chronological list of every highlight/artigo across all
+// published bulletins, each still carrying a reference back to its parent
+// bulletin. Distinct from the boletim list — this is browsing by
+// individual news item rather than by weekly edition.
+function allArticlesFlat() {
+  const out = [];
+  MOCK_BULLETINS.forEach(b => {
+    [...b.highlights, ...b.articles].forEach(item => out.push({ item, bulletin: b }));
+  });
+  out.sort((a, b) => new Date(b.item.published_at) - new Date(a.item.published_at));
+  return out;
+}
+
+function renderArticlesIndex(filter) {
+  filter = filter || "all";
+  const all = allArticlesFlat();
+  const filtered = filter === "all" ? all : all.filter(({ item }) => item.sentiment === filter);
+
+  const filterDefs = [
+    { key: "all", label: "Todas" },
+    { key: "pos", label: "Positivas" },
+    { key: "neg", label: "Negativas" },
+    { key: "neu", label: "Neutras" }
+  ];
+  const filterBtns = filterDefs.map(f =>
+    `<button class="filter-btn${filter === f.key ? " active" : ""}" data-filter="${f.key}">${f.label}</button>`).join("");
+
+  const itemsHtml = filtered.length ? `
+    <ul class="article-list">
+      ${filtered.map(({ item, bulletin }) => `
+        <li>
+          <div class="al-top">
+            <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
+            <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+          </div>
+          <div class="al-bottom">
+            <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
+              · <a class="kwresult-source-link" href="#/boletim/${bulletin.id}">ver no boletim</a></span>
+            ${kwRow(item.keywords)}
+          </div>
+        </li>`).join("")}
+    </ul>` : `<p class="empty-state">Nenhum artigo encontrado para este filtro.</p>`;
+
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Todos os boletins</button>
+    <div class="list-head">
+      <h1>Todos os artigos</h1>
+      <p>Todas as notícias já publicadas nos boletins semanais, da mais recente à mais antiga (${all.length} no total).</p>
+      <div class="filter-row">${filterBtns}</div>
+    </div>
+    ${itemsHtml}`;
+  document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.onclick = () => renderArticlesIndex(btn.dataset.filter);
+  });
+  window.scrollTo(0, 0);
+}
+
 // Full browsable index of every keyword the system tracks, grouped the
 // same way as the "keywords" table's category column. Each term links to
 // its own filtered view (renderKeywordDetail).
@@ -973,6 +1048,7 @@ function route() {
   m = hash.match(/^#\/palavra-chave\/([^/]+)/);
   if (m) { renderKeywordDetail(decodeURIComponent(m[1])); return; }
   if (/^#\/palavras-chave/.test(hash)) { renderKeywordsIndex(); return; }
+  if (/^#\/artigos/.test(hash)) { renderArticlesIndex(); return; }
   m = hash.match(/^#\/busca\/([^/]+)/);
   if (m) { renderSearch(decodeURIComponent(m[1])); return; }
   renderList();
@@ -980,6 +1056,7 @@ function route() {
 window.addEventListener("hashchange", route);
 document.getElementById("logo-btn").onclick = () => { location.hash = "#/"; };
 document.getElementById("nav-boletins").onclick = (e) => { e.preventDefault(); location.hash = "#/"; };
+document.getElementById("nav-articles").onclick = (e) => { e.preventDefault(); location.hash = "#/artigos"; };
 document.getElementById("nav-keywords").onclick = (e) => { e.preventDefault(); location.hash = "#/palavras-chave"; };
 document.getElementById("nav-sobre").onclick = (e) => { e.preventDefault(); alert("Página \"Sobre\" ainda não desenhada — só um placeholder nesta prévia."); };
 route();
