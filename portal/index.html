@@ -106,6 +106,42 @@
   }
   .list-head p { color: var(--ink-soft); font-size: 15.5px; margin: 0; max-width: 560px; }
 
+  .trending-card {
+    background: var(--accent-2);
+    border-radius: var(--radius);
+    padding: 22px 26px 24px;
+    margin-bottom: 26px;
+  }
+  .trending-card .eyebrow { color: #cfe0d1; margin-bottom: 12px; }
+  .trend-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .trend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.22);
+    color: #fff;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    padding: 7px 10px 7px 14px;
+    border-radius: 22px;
+  }
+  .trend-chip .trend-count {
+    background: var(--gold);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    min-width: 19px;
+    height: 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0 3px;
+  }
+
   .bulletin-card {
     display: block;
     background: #fff;
@@ -453,12 +489,40 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// Trending keywords — frequency of each matched keyword across every
+// article/destaque in the given bulletins (default: all published
+// bulletins, i.e. "trending lately" rather than just within one edition,
+// since most terms only appear once inside any single week's mock data).
+function computeTrending(bulletins, limit) {
+  const counts = {};
+  bulletins.forEach(b => {
+    [...b.highlights, ...b.articles].forEach(item => {
+      (item.keywords || []).forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+    });
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit || 8);
+}
+function trendingCard(bulletins) {
+  const trending = computeTrending(bulletins, 8);
+  if (!trending.length) return "";
+  const chips = trending.map(([term, count]) => `
+    <span class="trend-chip">${escapeHtml(term)}<span class="trend-count">${count}</span></span>`).join("");
+  return `
+    <div class="trending-card">
+      <div class="eyebrow">Palavras-chave em alta</div>
+      <div class="trend-row">${chips}</div>
+    </div>`;
+}
+
 function renderList() {
   const head = `
     <div class="list-head">
       <h1>Boletins semanais</h1>
       <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
     </div>`;
+  const trending = trendingCard(MOCK_BULLETINS);
   const cards = MOCK_BULLETINS.map(b => `
     <a class="bulletin-card" data-id="${b.id}" href="#/boletim/${b.id}">
       <div class="eyebrow">Semana de ${weekRangeLabel(b)}</div>
@@ -469,7 +533,7 @@ function renderList() {
         <span class="read-link">Ler boletim completo →</span>
       </div>
     </a>`).join("");
-  document.getElementById("app").innerHTML = head + cards;
+  document.getElementById("app").innerHTML = head + trending + cards;
   document.querySelectorAll(".bulletin-card").forEach(card => {
     card.onclick = (e) => { e.preventDefault(); location.hash = `#/boletim/${card.dataset.id}`; };
   });
