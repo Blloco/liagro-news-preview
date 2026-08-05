@@ -132,6 +132,33 @@
   }
   footer.site .rss-link { margin-top: 12px; }
 
+  /* ---------- search ---------- */
+  .search-form { display: flex; gap: 8px; max-width: 480px; margin: 4px 0 16px; }
+  .search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .search-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .search-btn:hover { background: var(--accent-2); }
+  .search-form.inline { max-width: 420px; margin: 16px 0 0; }
+
   .trending-card {
     background: var(--accent-2);
     border-radius: var(--radius);
@@ -733,6 +760,10 @@ function renderList() {
     <div class="list-head">
       <h1>Boletins semanais</h1>
       <p>Um resumo, toda semana, do que realmente importou no agronegócio brasileiro — tendências de mercado, riscos climáticos e movimentos das principais empresas do setor.</p>
+      <form id="search-form" class="search-form">
+        <input type="search" id="search-input" class="search-input" placeholder="Buscar boletins, notícias ou palavras-chave…">
+        <button type="submit" class="search-btn">Buscar</button>
+      </form>
       <a class="rss-link" href="feed.xml" target="_blank" rel="noopener"><span class="rss-icon">RSS</span> Assine os boletins por RSS</a>
     </div>`;
   const trending = trendingCard(MOCK_BULLETINS);
@@ -759,6 +790,11 @@ function renderList() {
   document.querySelectorAll(".bulletin-card").forEach(card => {
     card.onclick = (e) => { e.preventDefault(); location.hash = `#/boletim/${card.dataset.id}`; };
   });
+  document.getElementById("search-form").onsubmit = (e) => {
+    e.preventDefault();
+    const q = document.getElementById("search-input").value.trim();
+    if (q) location.hash = `#/busca/${encodeURIComponent(q)}`;
+  };
 }
 
 function renderDetail(id) {
@@ -843,6 +879,93 @@ function renderKeywordDetail(term) {
   window.scrollTo(0, 0);
 }
 
+// Simple client-side substring search across bulletin titles/summaries,
+// article/destaque titles+sources, and keyword terms. Stands in for what
+// would be a real full-text query once the public API exists.
+function searchAll(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return { bulletins: [], items: [], keywords: [] };
+  const bulletins = MOCK_BULLETINS.filter(b =>
+    b.title.toLowerCase().includes(q) || b.summary.toLowerCase().includes(q));
+  const items = [];
+  MOCK_BULLETINS.forEach(b => {
+    [...b.highlights, ...b.articles].forEach(item => {
+      if (item.title.toLowerCase().includes(q) || item.source.toLowerCase().includes(q)) {
+        items.push({ item, bulletin: b });
+      }
+    });
+  });
+  const keywords = [];
+  Object.values(MOCK_ALL_KEYWORDS).forEach(list => {
+    list.forEach(term => { if (term.toLowerCase().includes(q)) keywords.push(term); });
+  });
+  return { bulletins, items, keywords };
+}
+
+function renderSearch(query) {
+  const { bulletins, items, keywords } = searchAll(query);
+  const total = bulletins.length + items.length + keywords.length;
+
+  const keywordsHtml = keywords.length ? `
+    <section class="block">
+      <h3>Palavras-chave (${keywords.length})</h3>
+      <div class="kwidx-chips">${keywords.map(term => `<a class="kwidx-chip" href="${keywordHref(term)}">${escapeHtml(term)}</a>`).join("")}</div>
+    </section>` : "";
+
+  const bulletinsHtml = bulletins.length ? `
+    <section class="block">
+      <h3>Boletins (${bulletins.length})</h3>
+      ${bulletins.map(b => `
+        <a class="bulletin-card" href="#/boletim/${b.id}">
+          <div class="eyebrow">Semana de ${weekRangeLabel(b)}</div>
+          <h2>${escapeHtml(b.title)}</h2>
+          <p class="excerpt">${escapeHtml(b.summary)}</p>
+        </a>`).join("")}
+    </section>` : "";
+
+  const itemsHtml = items.length ? `
+    <section class="block">
+      <h3>Notícias (${items.length})</h3>
+      <ul class="article-list">
+        ${items.map(({ item, bulletin }) => `
+          <li>
+            <div class="al-top">
+              <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
+              <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+            </div>
+            <div class="al-bottom">
+              <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
+                · <a class="kwresult-source-link" href="#/boletim/${bulletin.id}">ver no boletim</a></span>
+              ${kwRow(item.keywords)}
+            </div>
+          </li>`).join("")}
+      </ul>
+    </section>` : "";
+
+  const resultsHtml = total ? (keywordsHtml + bulletinsHtml + itemsHtml)
+    : `<p class="empty-state">Nenhum resultado para "${escapeHtml(query)}".</p>`;
+
+  document.getElementById("app").innerHTML = `
+    <button class="back-link" id="back-btn">← Todos os boletins</button>
+    <div class="list-head">
+      <div class="eyebrow">Busca</div>
+      <h1>"${escapeHtml(query)}"</h1>
+      <p>${total} resultado${total === 1 ? "" : "s"} encontrado${total === 1 ? "" : "s"}.</p>
+      <form id="search-form" class="search-form inline">
+        <input type="search" id="search-input" class="search-input" placeholder="Buscar boletins, notícias ou palavras-chave…" value="${escapeHtml(query)}">
+        <button type="submit" class="search-btn">Buscar</button>
+      </form>
+    </div>
+    ${resultsHtml}`;
+  document.getElementById("back-btn").onclick = () => { location.hash = "#/"; };
+  document.getElementById("search-form").onsubmit = (e) => {
+    e.preventDefault();
+    const q = document.getElementById("search-input").value.trim();
+    if (q) location.hash = `#/busca/${encodeURIComponent(q)}`;
+  };
+  window.scrollTo(0, 0);
+}
+
 function route() {
   const hash = location.hash || "#/";
   let m = hash.match(/^#\/boletim\/(\d+)/);
@@ -850,6 +973,8 @@ function route() {
   m = hash.match(/^#\/palavra-chave\/([^/]+)/);
   if (m) { renderKeywordDetail(decodeURIComponent(m[1])); return; }
   if (/^#\/palavras-chave/.test(hash)) { renderKeywordsIndex(); return; }
+  m = hash.match(/^#\/busca\/([^/]+)/);
+  if (m) { renderSearch(decodeURIComponent(m[1])); return; }
   renderList();
 }
 window.addEventListener("hashchange", route);
