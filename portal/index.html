@@ -1057,10 +1057,10 @@ function renderArticlesIndex() {
     `<button class="filter-btn${articlesFilterState.sentiment === f.key ? " active" : ""}" data-filter="${f.key}">${f.label}</button>`).join("");
 
   const datePresetDefs = [
-    { key: "all", label: "Todo o período" },
     { key: "24h", label: "Últimas 24 horas" },
     { key: "7d", label: "Últimos 7 dias" },
-    { key: "30d", label: "Últimos 30 dias" }
+    { key: "30d", label: "Últimos 30 dias" },
+    { key: "all", label: "Todo o período" }
   ];
   const datePresetBtns = datePresetDefs.map(d =>
     `<button class="filter-btn${articlesFilterState.datePreset === d.key ? " active" : ""}" data-date-preset="${d.key}">${d.label}</button>`).join("");
