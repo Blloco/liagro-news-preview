@@ -249,6 +249,21 @@
     color: var(--muted);
   }
   .highlight-card .h-meta .dot { opacity: .5; }
+  .highlight-card .kw-row { margin-top: 9px; }
+
+  /* keyword tags — reused on highlight cards and the weekly article list */
+  .kw-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .kw-chip {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 20px;
+    letter-spacing: .01em;
+    white-space: nowrap;
+  }
 
   .analysis-body { font-size: 16px; line-height: 1.75; color: var(--ink); }
   .analysis-body h4 {
@@ -263,17 +278,21 @@
 
   .article-list { list-style: none; margin: 0; padding: 0; }
   .article-list li {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 13px 0;
+    padding: 14px 0;
     border-bottom: 1px solid var(--line);
     font-size: 14.5px;
   }
   .article-list li:last-child { border-bottom: none; }
+  .al-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 7px;
+  }
   .article-list a.al-title { font-weight: 600; color: var(--ink); text-decoration: none; }
   .article-list a.al-title:hover { color: var(--accent-2); text-decoration: underline; }
+  .al-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .article-list .al-meta { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
   footer.site {
@@ -337,15 +356,15 @@ const MOCK_BULLETINS = [
     ],
     sentiments: { pos: 3, neg: 2, neu: 1 },
     highlights: [
-      { title: "Safra de soja 2026/27 deve crescer 4% aponta Conab", source: "Agrolink", published_at: "2026-08-01", sentiment: "pos", url: "#" },
-      { title: "Syngenta anuncia novo fungicida para ferrugem asiática", source: "Syngenta", published_at: "2026-08-01", sentiment: "neu", url: "#" },
-      { title: "Embrapa lança cultivar de algodão resistente à seca", source: "Embrapa", published_at: "2026-07-27", sentiment: "pos", url: "#" }
+      { title: "Safra de soja 2026/27 deve crescer 4% aponta Conab", source: "Agrolink", published_at: "2026-08-01", sentiment: "pos", url: "#", keywords: ["soja"] },
+      { title: "Syngenta anuncia novo fungicida para ferrugem asiática", source: "Syngenta", published_at: "2026-08-01", sentiment: "neu", url: "#", keywords: ["Syngenta", "fungicidas"] },
+      { title: "Embrapa lança cultivar de algodão resistente à seca", source: "Embrapa", published_at: "2026-07-27", sentiment: "pos", url: "#", keywords: ["algodão"] }
     ],
     articles: [
-      { title: "Preço do milho recua com pressão de exportações americanas", source: "Reuters", published_at: "2026-08-03", sentiment: "neg", url: "#" },
-      { title: "Chuvas irregulares preocupam produtores do Mato Grosso", source: "Canal Rural", published_at: "2026-07-30", sentiment: "neg", url: "#" },
-      { title: "Corteva expande produção de sementes bioestimulantes", source: "Corteva", published_at: "2026-07-29", sentiment: "pos", url: "#" },
-      { title: "Ruveon inicia operações comerciais nos EUA", source: "Ruveon", published_at: "2026-07-17", sentiment: "neu", url: "#" }
+      { title: "Preço do milho recua com pressão de exportações americanas", source: "Reuters", published_at: "2026-08-03", sentiment: "neg", url: "#", keywords: ["milho"] },
+      { title: "Chuvas irregulares preocupam produtores do Mato Grosso", source: "Canal Rural", published_at: "2026-07-30", sentiment: "neg", url: "#", keywords: ["clima"] },
+      { title: "Corteva expande produção de sementes bioestimulantes", source: "Corteva", published_at: "2026-07-29", sentiment: "pos", url: "#", keywords: ["Corteva", "sementes"] },
+      { title: "Ruveon inicia operações comerciais nos EUA", source: "Ruveon", published_at: "2026-07-17", sentiment: "neu", url: "#", keywords: ["Ruveon"] }
     ]
   },
   {
@@ -363,14 +382,14 @@ const MOCK_BULLETINS = [
     ],
     sentiments: { pos: 2, neg: 2, neu: 2 },
     highlights: [
-      { title: "Preços de fertilizantes caem pelo terceiro mês seguido", source: "Infomoney", published_at: "2026-07-24", sentiment: "pos", url: "#" },
-      { title: "Geada atinge lavouras de café no Sul de Minas", source: "Canal Rural", published_at: "2026-07-22", sentiment: "neg", url: "#" }
+      { title: "Preços de fertilizantes caem pelo terceiro mês seguido", source: "Infomoney", published_at: "2026-07-24", sentiment: "pos", url: "#", keywords: ["fertilizantes"] },
+      { title: "Geada atinge lavouras de café no Sul de Minas", source: "Canal Rural", published_at: "2026-07-22", sentiment: "neg", url: "#", keywords: ["café", "clima", "Sul"] }
     ],
     articles: [
-      { title: "Algodão brasileiro ganha espaço no mercado asiático", source: "Reuters", published_at: "2026-07-25", sentiment: "pos", url: "#" },
-      { title: "BASF anuncia investimento em planta de biológicos", source: "BASF", published_at: "2026-07-23", sentiment: "pos", url: "#" },
-      { title: "Cooperativas avaliam extensão do prejuízo com geada", source: "Cultivar", published_at: "2026-07-21", sentiment: "neg", url: "#" },
-      { title: "Clima segue instável no Sul do país", source: "CNN Brasil", published_at: "2026-07-20", sentiment: "neu", url: "#" }
+      { title: "Algodão brasileiro ganha espaço no mercado asiático", source: "Reuters", published_at: "2026-07-25", sentiment: "pos", url: "#", keywords: ["algodão"] },
+      { title: "BASF anuncia investimento em planta de biológicos", source: "BASF", published_at: "2026-07-23", sentiment: "pos", url: "#", keywords: ["BASF", "bioinsumos"] },
+      { title: "Cooperativas avaliam extensão do prejuízo com geada", source: "Cultivar", published_at: "2026-07-21", sentiment: "neg", url: "#", keywords: ["clima"] },
+      { title: "Clima segue instável no Sul do país", source: "CNN Brasil", published_at: "2026-07-20", sentiment: "neu", url: "#", keywords: ["clima", "Sul"] }
     ]
   },
   {
@@ -388,14 +407,14 @@ const MOCK_BULLETINS = [
     ],
     sentiments: { pos: 4, neg: 1, neu: 1 },
     highlights: [
-      { title: "Exportações de carne bovina batem recorde no semestre", source: "Reuters", published_at: "2026-07-18", sentiment: "pos", url: "#" },
-      { title: "China amplia habilitação de frigoríficos brasileiros", source: "Agrolink", published_at: "2026-07-16", sentiment: "pos", url: "#" }
+      { title: "Exportações de carne bovina batem recorde no semestre", source: "Reuters", published_at: "2026-07-18", sentiment: "pos", url: "#", keywords: [] },
+      { title: "China amplia habilitação de frigoríficos brasileiros", source: "Agrolink", published_at: "2026-07-16", sentiment: "pos", url: "#", keywords: [] }
     ],
     articles: [
-      { title: "Plantio de trigo avança dentro do cronograma no Sul", source: "Canal Rural", published_at: "2026-07-19", sentiment: "neu", url: "#" },
-      { title: "Frete marítimo pressiona margens de exportadores", source: "Infomoney", published_at: "2026-07-15", sentiment: "neg", url: "#" },
-      { title: "Novos mercados asiáticos se abrem para carne suína", source: "Reuters", published_at: "2026-07-14", sentiment: "pos", url: "#" },
-      { title: "Embrapa apresenta balanço de pesquisas em pecuária", source: "Embrapa", published_at: "2026-07-13", sentiment: "pos", url: "#" }
+      { title: "Plantio de trigo avança dentro do cronograma no Sul", source: "Canal Rural", published_at: "2026-07-19", sentiment: "neu", url: "#", keywords: ["trigo", "Sul"] },
+      { title: "Frete marítimo pressiona margens de exportadores", source: "Infomoney", published_at: "2026-07-15", sentiment: "neg", url: "#", keywords: [] },
+      { title: "Novos mercados asiáticos se abrem para carne suína", source: "Reuters", published_at: "2026-07-14", sentiment: "pos", url: "#", keywords: [] },
+      { title: "Embrapa apresenta balanço de pesquisas em pecuária", source: "Embrapa", published_at: "2026-07-13", sentiment: "pos", url: "#", keywords: [] }
     ]
   }
 ];
@@ -422,6 +441,14 @@ function sentimentChips(s) {
   return parts.join("");
 }
 function sentDotClass(s) { return s === "pos" ? "pos" : s === "neg" ? "neg" : "neu"; }
+function sentLabel(s) { return s === "pos" ? "positiva" : s === "neg" ? "negativa" : "neutra"; }
+// Keyword tags matched by the system (see migrations 009/010/015) — only
+// rendered when an article actually matched at least one term, same as the
+// real word-boundary matching in scraper/runner.py.
+function kwRow(keywords) {
+  if (!keywords || !keywords.length) return "";
+  return `<div class="kw-row">${keywords.map(k => `<span class="kw-chip">${escapeHtml(k)}</span>`).join("")}</div>`;
+}
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -460,16 +487,23 @@ function renderDetail(id) {
         <span class="dot">·</span>
         <span>${WEEKDAY_FMT.format(parseLocalDate(h.published_at))}</span>
         <span class="dot">·</span>
-        <span class="sent-chip ${sentDotClass(h.sentiment)}">${h.sentiment === "pos" ? "positiva" : h.sentiment === "neg" ? "negativa" : "neutra"}</span>
+        <span class="sent-chip ${sentDotClass(h.sentiment)}">${sentLabel(h.sentiment)}</span>
       </div>
+      ${kwRow(h.keywords)}
     </a>`).join("");
 
   const analysisHtml = b.analysis.map(a => `<h4>${escapeHtml(a.h)}</h4><p>${escapeHtml(a.p)}</p>`).join("");
 
   const articleItems = b.articles.map(a => `
     <li>
-      <a class="al-title" href="${a.url}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>
-      <span class="al-meta">${escapeHtml(a.source)} · ${WEEKDAY_FMT.format(parseLocalDate(a.published_at))}</span>
+      <div class="al-top">
+        <a class="al-title" href="${a.url}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>
+        <span class="sent-chip ${sentDotClass(a.sentiment)}">${sentLabel(a.sentiment)}</span>
+      </div>
+      <div class="al-bottom">
+        <span class="al-meta">${escapeHtml(a.source)} · ${WEEKDAY_FMT.format(parseLocalDate(a.published_at))}</span>
+        ${kwRow(a.keywords)}
+      </div>
     </li>`).join("");
 
   document.getElementById("app").innerHTML = `
