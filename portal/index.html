@@ -316,10 +316,15 @@
     font-weight: 600;
     padding: 3px 9px;
     border-radius: 20px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: filter .1s ease;
   }
   .sent-chip.pos { background: var(--pos-bg); color: var(--pos); }
   .sent-chip.neg { background: var(--neg-bg); color: var(--neg); }
   .sent-chip.neu { background: var(--neu-bg); color: var(--neu); }
+  .sent-chip:hover { filter: brightness(0.94); text-decoration: underline; }
   .read-link { font-size: 14px; font-weight: 600; color: var(--accent); white-space: nowrap; }
   .bulletin-card .read-link { color: #fff; }
 
@@ -793,7 +798,7 @@ const MOCK_ALL_KEYWORDS = {
     "sorgo", "girassol", "amendoim", "mandioca", "cevada", "aveia", "gergelim",
     "mamona", "cacau", "uva", "citros", "maçã", "tomate", "batata", "fumo"
   ],
-  insumo: ["herbicidas", "fungicidas", "inseticidas", "nematicidas", "fertilizantes", "biofertilizantes", "biodefensivos", "bioinsumos", "sementes"],
+  insumo: ["herbicidas", "fungicidas", "inseticidas", "nematicidas", "acaricidas", "fertilizantes", "biofertilizantes", "biodefensivos", "bioinsumos", "sementes"],
   regional: [
     "Cerrado", "Sul", "Sudeste", "Nordeste", "Norte", "Centro-Oeste", "MATOPIBA",
     "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal",
@@ -847,6 +852,11 @@ function sentimentChips(s) {
 }
 function sentDotClass(s) { return s === "pos" ? "pos" : s === "neg" ? "neg" : "neu"; }
 function sentLabel(s) { return s === "pos" ? "positiva" : s === "neg" ? "negativa" : "neutra"; }
+// Every sentiment chip links to the Artigos page pre-filtered to that
+// sentiment (see route()'s "#/artigos/:sentiment" branch), so readers can
+// jump straight from "positiva"/"negativa"/"neutra" on any article to the
+// full filtered list instead of just seeing it as a static label.
+function sentimentHref(s) { return `#/artigos/${sentDotClass(s)}`; }
 function keywordHref(term) { return `#/palavra-chave/${encodeURIComponent(term)}`; }
 // Keyword tags matched by the system (see migrations 009/010/015/016) — only
 // rendered when an article actually matched at least one term, same as the
@@ -904,7 +914,7 @@ function articleCardHtml(item) {
         <span class="dot">·</span>
         <span>${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}</span>
         <span class="dot">·</span>
-        <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+        <a class="sent-chip ${sentDotClass(item.sentiment)}" href="${sentimentHref(item.sentiment)}">${sentLabel(item.sentiment)}</a>
       </div>
       ${kwRow(item.keywords)}
     </div>`;
@@ -1072,7 +1082,7 @@ function renderArticlesIndex() {
         <li>
           <div class="al-top">
             <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
-            <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+            <a class="sent-chip ${sentDotClass(item.sentiment)}" href="${sentimentHref(item.sentiment)}">${sentLabel(item.sentiment)}</a>
           </div>
           <div class="al-bottom">
             <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
@@ -1186,7 +1196,7 @@ function renderKeywordDetail(term) {
         <li>
           <div class="al-top">
             <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
-            <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+            <a class="sent-chip ${sentDotClass(item.sentiment)}" href="${sentimentHref(item.sentiment)}">${sentLabel(item.sentiment)}</a>
           </div>
           <div class="al-bottom">
             <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
@@ -1260,7 +1270,7 @@ function renderSearch(query) {
           <li>
             <div class="al-top">
               <a class="al-title" href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>
-              <span class="sent-chip ${sentDotClass(item.sentiment)}">${sentLabel(item.sentiment)}</span>
+              <a class="sent-chip ${sentDotClass(item.sentiment)}" href="${sentimentHref(item.sentiment)}">${sentLabel(item.sentiment)}</a>
             </div>
             <div class="al-bottom">
               <span class="al-meta">${escapeHtml(item.source)} · ${WEEKDAY_FMT.format(parseLocalDate(item.published_at))}
@@ -1302,6 +1312,12 @@ function route() {
   m = hash.match(/^#\/palavra-chave\/([^/]+)/);
   if (m) { renderKeywordDetail(decodeURIComponent(m[1])); return; }
   if (/^#\/palavras-chave/.test(hash)) { renderKeywordsIndex(); return; }
+  m = hash.match(/^#\/artigos\/(pos|neg|neu)/);
+  if (m) {
+    articlesFilterState = { sentiment: m[1], datePreset: "all", dateFrom: null, dateTo: null };
+    renderArticlesIndex();
+    return;
+  }
   if (/^#\/artigos/.test(hash)) {
     articlesFilterState = { sentiment: "all", datePreset: "all", dateFrom: null, dateTo: null };
     renderArticlesIndex();
